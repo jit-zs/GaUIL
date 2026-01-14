@@ -121,7 +121,7 @@ namespace gauil {
             std::vector<Vertex> vertices(DETAIL * 4 + 2);
             std::vector<Vertex> borderVertices(DETAIL * 4 + 2);
             vertices[0].position = rect.getCenter();
-            borderVertices[0].position = rect.getCenter();
+            borderVertices[0].position = rect.getCenter() + borders.getOffset() - borders.getBounds();
             for (size_t i = 0; i < DETAIL * 4 + 1; i++) {
                 Vector2f quadrant;
                 int quad = i / DETAIL;
@@ -152,9 +152,13 @@ namespace gauil {
                 Vertex& borderVertex = borderVertices[i + 1];
 
                 float borderLerp = borders.angleToBorderWidth(angle);
-                vertex.position = rect.getCenter() + ((rect.size - Vector2f(cornerRadius + borderLerp, cornerRadius + borderLerp) * 2.f) / 2.f * quadrant) + Vector2f::fromAngle(angle) * cornerRadius;
+                float border = borders.getBorderFromAngle(angle);
+                FRect innerRect = rect;
+                innerRect.position += borders.getOffset();
+                innerRect.size -= borders.getOffset() + borders.getBounds();
+                vertex.position = innerRect.getCenter() + ((innerRect.size - (Vector2f(cornerRadius, cornerRadius) ) * 2.f) / 2.f * quadrant) + Vector2f::fromAngle(angle) * cornerRadius;
                 if (!borders.isZero())
-                    borderVertex.position = rect.getCenter() + ((rect.size - Vector2f(cornerRadius, cornerRadius) * 2.f) / 2.f * quadrant) + Vector2f::fromAngle(angle) * cornerRadius;
+                    borderVertex.position = (rect.getCenter()) + ((rect.size - (Vector2f(cornerRadius, cornerRadius)) * 2.f) / 2.f * quadrant) + Vector2f::fromAngle(angle) * cornerRadius;
             }
             // drawRect(rect, color::FALLBACK);
             if (!borders.isZero())
