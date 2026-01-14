@@ -103,6 +103,7 @@ namespace gauil {
         [[nodiscard]] constexpr Vector2 ceil() const {
             return { std::ceil(x), std::ceil(y) };
         }
+        /// @returns { ceil(abs(x)) * sign(x), ceil(abs(y)) * sign(y) }
         [[nodiscard]] constexpr Vector2 ceilWithAbs(){
             return {std::ceil(std::abs(x)) * (std::signbit(x) ? -1 : 1), std::ceil(std::abs(y)) * (std::signbit(y) ? -1 : 1)};
         }
