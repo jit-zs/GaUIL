@@ -6,6 +6,7 @@ include(FetchContent)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 17)
 
+
 set(COMPILE_DEV OFF "Compile dev application") # Should be set to OFF if you only want the library. Will probably fail.
 set(SFML_STATIC ON)
 
@@ -18,7 +19,7 @@ FetchContent_Declare(
 FetchContent_Declare(
     SimpleSS
     GIT_REPOSITORY https://github.com/jit-zs/SimpleSS.git
-    GIT_TAG v0.0.1-a
+    GIT_TAG v0.0.3
 )
 
 FetchContent_MakeAvailable(sfml SimpleSS)
