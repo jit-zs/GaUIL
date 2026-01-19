@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <string>
 
 namespace gauil {
     enum class VerticalAlignment {
@@ -22,6 +23,8 @@ namespace gauil {
         static constexpr float DEFAULT_TEXT_PADDING = 3;
         static constexpr float DEFAULT_BORDER_WIDTH = 2;
         static constexpr float DEFAULT_BORDER_RADIUS = 5;
+
+        static constexpr Color DEFAULT_TEXT_COLOR {255, 255, 255, 255};
 
         struct Label {
             Color color = color::WHITE;
