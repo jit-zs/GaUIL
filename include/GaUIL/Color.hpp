@@ -1,7 +1,9 @@
 #ifndef GAUIL_COLOR_HPP
 #define GAUIL_COLOR_HPP
 
+#include <array>
 #include <cstdint>
+
 
 #if __has_include(<SFML/Graphics/Color.hpp>)
 #include <SFML/Graphics/Color.hpp>
@@ -9,13 +11,20 @@
 
 namespace gauil {
     struct Color {
-        uint8_t r = 0;
-        uint8_t g = 0;
-        uint8_t b = 0;
-        uint8_t a = 255;
+        union {
+            struct {
+                uint8_t r;
+                uint8_t g;
+                uint8_t b;
+                uint8_t a;
+            };
+            std::array<uint8_t, 4> array;
+        };
+
 
         constexpr Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) : r(r), g(g), b(b), a(a) {}
-        constexpr Color() = default;
+        constexpr Color(const std::array<uint8_t, 4>& array) : array(array) {}
+        constexpr Color() : r(0), g(0), b(0), a(255) {};
 #if __has_include(<SFML/Graphics/Color.hpp>)
         constexpr Color(const sf::Color& color) : r(color.r), g(color.g), b(color.b), a(color.a) {}
         constexpr operator sf::Color() const {
