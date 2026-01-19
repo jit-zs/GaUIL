@@ -13,10 +13,10 @@ namespace gauil {
     struct Edges {
         union {
             struct {
-                T top = 0;
-                T left = 0;
-                T bottom = 0;
                 T right = 0;
+                T bottom = 0;
+                T left = 0;
+                T top = 0;
             };
             struct {
                 T edges[4];
@@ -30,15 +30,26 @@ namespace gauil {
         constexpr T angleToBorderWidth(T radians) const {
             int ang = int(radians * RAD2DEG);
             ang %= 360;
-            float t = (ang % 4) / 90.0f;
+            float t = (ang % 90) / 90.0f;
 
             int primaryEdge = (ang) / 90;
             int secondaryEdge = (ang) / 90 + 1;
             secondaryEdge = secondaryEdge == 4 ? 0 : secondaryEdge;
 
-            float a = edges[primaryEdge];
-            float b = edges[secondaryEdge];
-            return lerp<T>(a, b, clamp(0.f, 1.f, t));
+            T a = edges[primaryEdge];
+            T b = edges[secondaryEdge];
+            return lerp<T>(a, b, t);
+        }
+        constexpr T getBorderFromAngle(T radians) const {
+            return edges[(int(radians * RAD2DEG) % 360) / 90];
+        }
+        /// @returns Vector2 where x = left and y = top
+        constexpr Vector2<T> getOffset() const {
+            return { left, top };
+        }
+        /// @returns Vector2 where x = right and y = bottom
+        constexpr Vector2<T> getBounds() const {
+            return { right, bottom };
         }
         constexpr bool isZero() const {
             return !top && !bottom && !left && !right;
