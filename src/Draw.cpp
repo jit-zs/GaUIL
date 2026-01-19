@@ -110,59 +110,53 @@ namespace gauil {
         }
         // TODO: Borders
         void roundRect(const FRect& rect, const FCorners& radius, const FEdges& borders, const Color& backgroundColor, const Color& borderColor) {
-            if (radius.isZero()) {
-                drawRect(rect, borderColor);
-                drawRect({ rect.position + Vector2f(borders.left, borders.top), rect.size - Vector2f(borders.left + borders.right, borders.top + borders.bottom) }, backgroundColor);
-                return;
-            }
-
 
             static constexpr int DETAIL = 16; // Amount of vertices on each corner
             std::vector<Vertex> vertices(DETAIL * 4 + 2);
-            std::vector<Vertex> borderVertices(DETAIL * 4 + 2);
+            std::vector<Vertex> borderVertices;
             vertices[0].position = rect.getCenter();
-            borderVertices[0].position = rect.getCenter() + borders.getOffset() - borders.getBounds();
             for (size_t i = 0; i < DETAIL * 4 + 1; i++) {
                 Vector2f quadrant;
                 int quad = i / DETAIL;
-                float cornerRadius;
+                float cornerRadius = radius.topRight;
                 switch (quad) {
                 case 0:
                 case 4:
                     cornerRadius = radius.bottomRight;
+                     quadrant = {1, 1};
                     break;
                 case 1:
                     cornerRadius = radius.bottomLeft;
+                     quadrant = {-1, 1};
                     break;
                 case 2:
                     cornerRadius = radius.topLeft;
+                     quadrant = {-1, -1};
                     break;
                 case 3:
                     cornerRadius = radius.topRight;
+                     quadrant = {1, -1};
                     break;
                 };
                 const float angle = float(i) / float(DETAIL * 4) * M_PI * 2;
 
-                quadrant = Vector2f::fromAngle(angle);
-                quadrant = quadrant.ceilWithAbs();
-
-
                 cornerRadius = std::max(0.f, std::min(rect.h * .5f, std::min(rect.w * .5f, cornerRadius)));
                 Vertex& vertex = vertices[i + 1];
-                Vertex& borderVertex = borderVertices[i + 1];
 
-                float borderLerp = borders.angleToBorderWidth(angle);
-                float border = borders.getBorderFromAngle(angle);
+
                 FRect innerRect = rect;
                 innerRect.position += borders.getOffset();
                 innerRect.size -= borders.getOffset() + borders.getBounds();
-                vertex.position = innerRect.getCenter() + ((innerRect.size - (Vector2f(cornerRadius, cornerRadius) ) * 2.f) / 2.f * quadrant) + Vector2f::fromAngle(angle) * cornerRadius;
-                if (!borders.isZero())
-                    borderVertex.position = (rect.getCenter()) + ((rect.size - (Vector2f(cornerRadius, cornerRadius)) * 2.f) / 2.f * quadrant) + Vector2f::fromAngle(angle) * cornerRadius;
+                vertex.position = innerRect.getCenter() + ((innerRect.size - (Vector2f(cornerRadius, cornerRadius)) * 2.f) / 2.f * quadrant) + Vector2f::fromAngle(angle) * cornerRadius;
+                if (!borders.isZero()) {
+                    borderVertices.push_back(vertex);
+                    borderVertices.push_back({ .position = (rect.getCenter()) + ((rect.size - (Vector2f(cornerRadius, cornerRadius)) * 2.f) / 2.f * quadrant) + Vector2f::fromAngle(angle) * cornerRadius });
+                }
+
             }
             // drawRect(rect, color::FALLBACK);
             if (!borders.isZero())
-                drawTriangleFan(borderVertices.data(), borderVertices.size(), borderColor);
+                drawTriangleStrip(borderVertices.data(), borderVertices.size(), borderColor);
             drawTriangleFan(vertices.data(), vertices.size(), backgroundColor);
 
 
