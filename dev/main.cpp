@@ -75,13 +75,13 @@ void mainMenu() {
     if (gauil::button("Options", { 45_percent, 55_percent }, { 10_percent, 4_percent })) {
         uiStack.push(options);
     }
-    if (gauil::button("Quit[$$]X[@@]bear", { 45_percent, 60_percent }, { 10_percent, 4_percent })) {
+    if (gauil::button("Quit[$$]X[@@]", { 45_percent, 60_percent }, { 10_percent, 4_percent })) {
         window->close();
     }
 }
 
 void options() {
-    if (gauil::button("Back", { 0, 0 }, { 5_percent, 5_percent })) {
+    if (gauil::button("Back[@@]back", { 0, 0 }, { 5_percent, 5_percent })) {
         uiStack.pop();
     }
 }
@@ -131,9 +131,8 @@ int main() {
 
     gauil::init();
 
-    gauil::Style style;
-    //style.button.backgroundColor = gauil::Color(22, 66, 144);
-    gauil::setStyle(style);
+
+    gauil::loadStyle("theme.simss");
 
 
 
