@@ -6,15 +6,15 @@
 #include <algorithm>
 #include <any>
 #include <map>
+#include <optional>
+#include <set>
 #include <stack>
 #include <string>
 #include <vector>
 
-
+#include <SimpleSS/SimpleSS.hpp>
 
 namespace gauil {
-
-
     struct DrawCall {
         enum Type {
             None,
@@ -37,6 +37,44 @@ namespace gauil {
         std::vector<Vertex> vertices;
     };
 
+    class LabelData {
+        std::string mText, mId, mStyle;
+    public:
+        LabelData() = delete;
+        LabelData(const std::string& raw) {
+            static const std::string textDelimiter = "[$$]";
+            static const std::string styleDelimiter = "[@@]";
+
+            bool useStyleDelimOnText = raw.find(textDelimiter) == std::string::npos;
+            mText = std::string(raw.begin(), std::search(raw.begin(), raw.end(), std::boyer_moore_searcher(
+                useStyleDelimOnText ? styleDelimiter.begin() : textDelimiter.begin(), useStyleDelimOnText ? styleDelimiter.end() : textDelimiter.end())), std::allocator<char>());
+            mId = std::string(raw.begin(), std::search(raw.begin(), raw.end(), std::boyer_moore_searcher(styleDelimiter.begin(), styleDelimiter.end())), std::allocator<char>());
+
+
+
+            mStyle = std::string(std::search(raw.begin(), raw.end(), std::boyer_moore_searcher(styleDelimiter.begin(), styleDelimiter.end())), raw.end(), std::allocator<char>());
+            if (!mStyle.empty())
+                mStyle.erase(mStyle.begin(), mStyle.begin() + 4);
+
+            // printf("Label Text: %s\n", mText.c_str());
+            // printf("ID: %s\n", mId.c_str());
+            // printf("Style: %s\n", mStyle.c_str());
+        }
+        /// @returns all characters before '[$$]'
+        const std::string& getText() {
+            return mText;
+        }
+        /// @returns all characters before '[@@]'
+        const std::string& getId() {
+            return mId;
+        }
+        /// @returns all characters after '[@@]' if any else it just returns an empty string
+        const std::string& getStyle() {
+            return mStyle;
+        }
+    };
+    static std::map<std::string, std::any> auxiliaryUIData;
+    static std::set<std::string> drawnUIElements;
 
 
     static Vector2u windowSize;
@@ -47,7 +85,8 @@ namespace gauil {
     static bool mouseDown = false;
 
 
-    static Style style;
+    // static Style style;
+    static simss::StyleSheet style;
     static std::stack<FRect> subRectStack;
     static Vector2f subRectOffset;
 
@@ -58,6 +97,44 @@ namespace gauil {
     static std::function<GetMousePositionCallback> mousePosFn;
     static std::function<IsMousePressedCallback> mousePressedFn;
 
+
+    inline Style::Label getLabelStyle(const std::string& style) {
+        Style::Label label;
+        label.color = gauil::style.getValue(style, "text_color").asColor(Style::DEFAULT_TEXT_COLOR.array);
+        label.font = gauil::style.getValue(style, "font").asString();
+        std::string hzAlignment = gauil::style.getValue(style, "horizontal_alignment").asString("center");
+        label.horizontalAlignment = hzAlignment == "left" ? HorizontalAlignment::Left : hzAlignment == "right" ? HorizontalAlignment::Right : HorizontalAlignment::Center;
+
+        std::string vtAlignment = gauil::style.getValue(style, "horizontal_alignment").asString();
+        label.verticalAlignment = vtAlignment == "top" ? VerticalAlignment::Top : vtAlignment == "bottom" ? VerticalAlignment::Bottom : VerticalAlignment::Center;
+        return label;
+    }
+    inline Style::Button getButtonStyle(const std::string& style, const std::string& state) {
+        std::string fullStyle = style + (style.empty() ? "" : ".") + "button" + state;
+        Style::Button button;
+        button.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(gauil::color::DARK_MODE_BACKGROUND.array);
+        button.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(gauil::color::DARK_MODE_BORDER.array);
+        float border = gauil::style.getValue(fullStyle, "border").asNumber(gauil::Style::DEFAULT_BORDER_WIDTH);
+        button.border.top = gauil::style.getValue(fullStyle, "border_top").asNumber(border);
+        button.border.bottom = gauil::style.getValue(fullStyle, "border_bottom").asNumber(border);
+        button.border.left = gauil::style.getValue(fullStyle, "border_left").asNumber(border);
+        button.border.right = gauil::style.getValue(fullStyle, "border_right").asNumber(border);
+
+        float textPadding = gauil::style.getValue(fullStyle, "padding").asNumber(gauil::Style::DEFAULT_TEXT_PADDING);
+        button.textPadding.top = gauil::style.getValue(fullStyle, "padding_top").asNumber(textPadding);
+        button.textPadding.bottom = gauil::style.getValue(fullStyle, "padding_bottom").asNumber(textPadding);
+        button.textPadding.left = gauil::style.getValue(fullStyle, "padding_left").asNumber(textPadding);
+        button.textPadding.right = gauil::style.getValue(fullStyle, "padding_right").asNumber(textPadding);
+
+        float borderRadius = gauil::style.getValue(fullStyle, "radius").asNumber(gauil::Style::DEFAULT_BORDER_RADIUS);
+        button.borderRadius.topRight = gauil::style.getValue(fullStyle, "radius_top_right").asNumber(borderRadius);
+        button.borderRadius.topLeft = gauil::style.getValue(fullStyle, "radius_top_left").asNumber(borderRadius);
+        button.borderRadius.bottomRight = gauil::style.getValue(fullStyle, "radius_bottom_right").asNumber(borderRadius);
+        button.borderRadius.bottomLeft = gauil::style.getValue(fullStyle, "radius_bottom_left").asNumber(borderRadius);
+
+        button.label = getLabelStyle(fullStyle);
+        return button;
+    }
     inline Vector2f getCurrentOffset() {
         return subRectOffset;
     }
@@ -138,6 +215,8 @@ namespace gauil {
 
         subRectStack.push({ {}, (Vector2f)windowSizeFn() });
         subRectOffset = Vector2f::ZERO;
+
+        style = simss::StyleSheet();
     }
     void cleanup() {
 
@@ -157,9 +236,16 @@ namespace gauil {
         subRectStack.pop();
     }
 
-    void setStyle(const Style& style) {
-        gauil::style = style;
+    bool loadStyle(const std::string& styleSheet) {
+        auto newStyle = simss::loadFromFile(styleSheet);
+        if (newStyle) {
+            gauil::style = newStyle.getValue();
+            return true;
+        }
 
+        for (auto err : newStyle.getErrors())
+            printf("%s\n", err.c_str());
+        return false;
     }
 
     void labelRaw(const std::string& text, const Layout2D& position, const Layout2D& size, const Style::Label& style) {
@@ -207,21 +293,17 @@ namespace gauil {
         queueText(textRect.position + textBoxAlignment, pixSize.min(), scale, text, getDefaultFont(), style.color); // Draw text
     }
     void label(const std::string& text, const Layout2D& position, const Layout2D& size) {
-        labelRaw(text, position, size, style.label);
+        LabelData data(text);
+        drawnUIElements.insert(data.getId());
+
+        labelRaw(data.getText(), position, size, getLabelStyle(data.getStyle()));
     }
 
-    bool button(const std::string& text, const Layout2D& position, const Layout2D& size) {
+    bool buttonRaw(const std::string& text, const Layout2D& position, const Layout2D& size, const Style::Button& buttonStyle) {
         Vector2f pixPos = layoutToPosition(position);
         Vector2f pixSize = layoutToPixel(size);
 
-        const Style::Button& buttonStyle = [&] {
-            FRect rect(pixPos, pixSize);
-            if (rect.contains(static_cast<Vector2f>(mousePos)))
-                return priv::isMouseHeld() ? style.clickedButton : style.hovererdButton;
-            return style.button;
-            }();
-
-        queueRect(FRect{ pixPos, pixSize }, buttonStyle.borderRadius, buttonStyle.border, buttonStyle.backgroundColor, buttonStyle.borderColor); // Draw border
+        queueRect(FRect{ pixPos, pixSize }, buttonStyle.borderRadius, buttonStyle.border, buttonStyle.backgroundColor, buttonStyle.borderColor);
 
         Vector2f backgroundOffset = Vector2f(buttonStyle.border.left, buttonStyle.border.top);
         Vector2f backgroundBounds = Vector2f(buttonStyle.border.right, buttonStyle.border.bottom);
@@ -237,14 +319,29 @@ namespace gauil {
         FRect rect(pixPos, pixSize);
         return rect.contains((Vector2f)mousePos) && priv::isMouseUp();
     }
+    bool button(const std::string& text, const Layout2D& position, const Layout2D& size) {
+        LabelData data(text);
+        drawnUIElements.insert(data.getId());
+        Vector2f pixPos = layoutToPosition(position);
+        Vector2f pixSize = layoutToPixel(size);
+        const std::string& state = [&] {
+            FRect rect(pixPos, pixSize);
+            if (rect.contains(static_cast<Vector2f>(mousePos)))
+                return priv::isMouseHeld() ? "|active" : "|hover";
+            return "";
+            }();
+
+        return buttonRaw(data.getText(), position, size, getButtonStyle(data.getStyle(), state));
+    }
 
 
 
     void update() {
         GAUIL_ASSERT(!uiActive, "Each call to gauil::update must have a corresponding call to gauil::draw");
         uiActive = true;
-
         cachedDrawCalls.clear();
+
+        drawnUIElements.clear();
 
 
         mouseDown = mousePressedFn();

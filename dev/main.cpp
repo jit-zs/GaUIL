@@ -6,7 +6,7 @@
 #include <fstream>
 #include <stack>
 
-
+using namespace gauil::literals;
 namespace dev {
     template <sf::PrimitiveType T>
     void drawTriangles(const gauil::Vertex* vertices, size_t vertexCount, const gauil::Color& color, const std::any& userData) {
@@ -66,8 +66,7 @@ void mainMenu();
 void options();
 
 void mainMenu() {
-    using namespace gauil::literals;
-    gauil::label("Dev", { 10_percent, 10_percent }, { 80_percent, 30_percent });
+    gauil::label("Dev[$$]Hi[@@]bear", { 10_percent, 10_percent }, { 80_percent, 30_percent });
 
     if (gauil::button("Start", { 45_percent, 50_percent }, { 10_percent, 4_percent })) {
         printf("Start\n");
@@ -76,13 +75,12 @@ void mainMenu() {
     if (gauil::button("Options", { 45_percent, 55_percent }, { 10_percent, 4_percent })) {
         uiStack.push(options);
     }
-    if (gauil::button("Quit", { 45_percent, 60_percent }, { 10_percent, 4_percent })) {
+    if (gauil::button("Quit[$$]X[@@]bear", { 45_percent, 60_percent }, { 10_percent, 4_percent })) {
         window->close();
     }
 }
 
 void options() {
-    using namespace gauil::literals;
     if (gauil::button("Back", { 0, 0 }, { 5_percent, 5_percent })) {
         uiStack.pop();
     }
@@ -115,10 +113,6 @@ void initCallbacks() {
 }
 
 int main() {
-    using namespace gauil::literals;
-
-
-
     auto fullscreenModes = sf::VideoMode::getFullscreenModes();
 
     sf::ContextSettings windowSettings;
@@ -155,6 +149,11 @@ int main() {
                 view.setCenter(view.getSize() / 2.f);
                 window->setView(view);
             }
+            else if (auto key = ev->getIf<sf::Event::KeyReleased>()){
+                if (key->code == sf::Keyboard::Key::Escape){
+                    window->close();
+                }
+            }
         }
 
         gauil::update();
@@ -162,7 +161,7 @@ int main() {
 
         uiStack.top()();
 
-        gauil::priv::roundRect({ 200, 300, 300, 300 }, gauil::FCorners(1000, 10, 0, 10), gauil::FEdges(10, 0, 10, 10), gauil::color::DARK_MODE_BACKGROUND, gauil::color::DARK_MODE_BORDER);
+        gauil::priv::roundRect({ 200, 300, 300, 300 }, gauil::FCorners(1000, 10, 0, 10), gauil::FEdges(10, 10, 10, 0), gauil::color::DARK_MODE_BACKGROUND, gauil::color::DARK_MODE_BORDER);
         // gauil::priv::roundRect({600, 200, 200, 200}, {}, gauil::FEdges(10), gauil::color::DARK_MODE_BACKGROUND, gauil::color::DARK_MODE_BORDER);
 
         gauil::draw();

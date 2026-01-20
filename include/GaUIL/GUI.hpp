@@ -26,9 +26,9 @@ namespace gauil {
     void init();
     void cleanup();
 
-    /// @brief Swaps the currently used style sheet 
-    /// @param style The new style (IS COPIED)
-    void setStyle(const Style& style);
+    /// @brief Loads Simple Style Sheet from file
+    /// @returns true on success else false
+    bool loadStyle(const std::string& file);
 
     /// @brief Prepares the GUI system for a new frame
     void update();

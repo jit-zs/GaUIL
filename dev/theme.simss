@@ -1,0 +1,16 @@
+
+
+{
+
+    border_color: rgb(25, 75, 196);
+    background_color: rgb(255, 0, 255);
+    text_color: rgb(128, 50, 75);
+}
+
+
+bear{
+    text_color: rgb(50, 128, 75);
+}
+bear.button{
+    text_color: rgb(50, 75, 128);
+}
