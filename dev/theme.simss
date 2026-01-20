@@ -3,14 +3,20 @@
 {
 
     border_color: rgb(25, 75, 196);
-    background_color: rgb(255, 0, 255);
-    text_color: rgb(128, 50, 75);
+    background_color: rgb(57, 57, 57);
+    text_color: rgb(255, 244, 244);
+
+    radius: 10000;
 }
 
 
-bear{
-    text_color: rgb(50, 128, 75);
+button|hover{
+    background_color: rgb(84, 84, 84);
 }
-bear.button{
-    text_color: rgb(50, 75, 128);
+
+
+back{
+    radius: 0;
+    radius_bottom_right: 10000;
+    background_color: rgba(25, 75, 196, 128);
 }
