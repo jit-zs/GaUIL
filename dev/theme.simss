@@ -7,6 +7,7 @@
     text_color: rgb(255, 244, 244);
 
     radius: 10000;
+    check_radius: 10000;
 }
 
 
@@ -14,6 +15,25 @@ button|hover{
     background_color: rgb(84, 84, 84);
 }
 
+
+check_box{
+    radius: 0;
+    padding: 10;
+}
+check_box|active{
+    padding: 5;
+}
+check{
+    radius: 0;
+    background_color: frgb(1, 1, 1);
+    border_color: frgb(1, 1, 1);
+}
+check|hover{
+    radius: 4;
+}
+check|active{
+    radius: 4;
+}
 
 back{
     radius: 0;

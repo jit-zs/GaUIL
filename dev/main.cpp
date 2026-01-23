@@ -84,6 +84,8 @@ void options() {
     if (gauil::button("Back[@@]back", { 0, 0 }, { 5_percent, 5_percent })) {
         uiStack.pop();
     }
+    static bool vsync = false;
+    gauil::checkBox(&vsync, "", {40_percent, 40_percent}, {20_percent, gauil::OTHER_LAYOUT});
 }
 
 void initCallbacks() {
