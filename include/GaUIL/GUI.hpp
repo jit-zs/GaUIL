@@ -50,6 +50,16 @@ namespace gauil {
     /// @return Whether the button was released over the button
     bool button(const std::string& text, const Layout2D& position, const Layout2D& size);
 
+
+    
+    /// @brief 
+    /// @param _bool 
+    /// @param style 
+    /// @param position 
+    /// @param size 
+    /// @returns if the box was clicked this frame 
+    bool checkBox(bool* _bool, const std::string& style, const Layout2D& position, const Layout2D& size);
+
     void setWindowSizeFn(const std::function<GetWindowSizeCallback>& fn);
     [[nodiscard]] std::function<GetWindowSizeCallback> getWindowSizeFn();
 

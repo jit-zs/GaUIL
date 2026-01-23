@@ -14,6 +14,7 @@
 
 #include <SimpleSS/SimpleSS.hpp>
 
+using namespace std::string_literals;
 namespace gauil {
     struct DrawCall {
         enum Type {
@@ -96,7 +97,38 @@ namespace gauil {
     static std::function<GetWindowSizeCallback> windowSizeFn;
     static std::function<GetMousePositionCallback> mousePosFn;
     static std::function<IsMousePressedCallback> mousePressedFn;
+    inline FEdges getBorder(const std::string& style, float _default) {
+        FEdges result;
+        float border = gauil::style.getValue(style, "border"s).asNumber(_default);
+        result.top = gauil::style.getValue(style, "border_top"s).asNumber(border);
+        result.bottom = gauil::style.getValue(style, "border_bottom"s).asNumber(border);
+        result.left = gauil::style.getValue(style, "border_left"s).asNumber(border);
+        result.right = gauil::style.getValue(style, "border_right"s).asNumber(border);
 
+        return result;
+    }
+
+    inline FEdges getPadding(const std::string& style, float _default) {
+        FEdges result;
+        float padding = gauil::style.getValue(style, "padding"s).asNumber(_default);
+        result.top = gauil::style.getValue(style, "padding_top"s).asNumber(padding);
+        result.bottom = gauil::style.getValue(style, "padding_bottom"s).asNumber(padding);
+        result.left = gauil::style.getValue(style, "padding_left"s).asNumber(padding);
+        result.right = gauil::style.getValue(style, "padding_right"s).asNumber(padding);
+
+        return result;
+    }
+
+    inline FCorners getBorderRadius(const std::string& style, float _default) {
+        FCorners result;
+        float radius = gauil::style.getValue(style, "radius"s).asNumber(_default);
+        result.topLeft = gauil::style.getValue(style, "radius_top_left"s).asNumber(radius);
+        result.topRight = gauil::style.getValue(style, "radius_top_right"s).asNumber(radius);
+        result.bottomLeft = gauil::style.getValue(style, "radius_bottom_left"s).asNumber(radius);
+        result.bottomRight = gauil::style.getValue(style, "radius_bottom_right"s).asNumber(radius);
+
+        return result;
+    }
 
     inline Style::Label getLabelStyle(const std::string& style) {
         Style::Label label;
@@ -114,31 +146,39 @@ namespace gauil {
         Style::Button button;
         button.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(gauil::color::DARK_MODE_BACKGROUND.array);
         button.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(gauil::color::DARK_MODE_BORDER.array);
-        float border = gauil::style.getValue(fullStyle, "border").asNumber(gauil::Style::DEFAULT_BORDER_WIDTH);
-        button.border.top = gauil::style.getValue(fullStyle, "border_top").asNumber(border);
-        button.border.bottom = gauil::style.getValue(fullStyle, "border_bottom").asNumber(border);
-        button.border.left = gauil::style.getValue(fullStyle, "border_left").asNumber(border);
-        button.border.right = gauil::style.getValue(fullStyle, "border_right").asNumber(border);
 
-        float textPadding = gauil::style.getValue(fullStyle, "padding").asNumber(gauil::Style::DEFAULT_TEXT_PADDING);
-        button.textPadding.top = gauil::style.getValue(fullStyle, "padding_top").asNumber(textPadding);
-        button.textPadding.bottom = gauil::style.getValue(fullStyle, "padding_bottom").asNumber(textPadding);
-        button.textPadding.left = gauil::style.getValue(fullStyle, "padding_left").asNumber(textPadding);
-        button.textPadding.right = gauil::style.getValue(fullStyle, "padding_right").asNumber(textPadding);
-
-        float borderRadius = gauil::style.getValue(fullStyle, "radius").asNumber(gauil::Style::DEFAULT_BORDER_RADIUS);
-        button.borderRadius.topRight = gauil::style.getValue(fullStyle, "radius_top_right").asNumber(borderRadius);
-        button.borderRadius.topLeft = gauil::style.getValue(fullStyle, "radius_top_left").asNumber(borderRadius);
-        button.borderRadius.bottomRight = gauil::style.getValue(fullStyle, "radius_bottom_right").asNumber(borderRadius);
-        button.borderRadius.bottomLeft = gauil::style.getValue(fullStyle, "radius_bottom_left").asNumber(borderRadius);
+        button.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
+        button.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);
+        button.borderRadius = getBorderRadius(fullStyle, Style::DEFAULT_BORDER_RADIUS);
 
         button.label = getLabelStyle(fullStyle);
         return button;
     }
+    inline Style::CheckBox getCheckBoxStyle(const std::string& style, const std::string& state) {
+        std::string fullStyle = style + (style.empty() ? "" : ".") + "check_box" + state;
+        Style::CheckBox checkBox;
+        checkBox.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(gauil::color::DARK_MODE_BACKGROUND.array);
+        checkBox.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(gauil::color::DARK_MODE_BORDER.array);
+
+        checkBox.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
+        checkBox.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);
+        checkBox.borderRadius = getBorderRadius(fullStyle, Style::DEFAULT_BORDER_RADIUS);
+
+        fullStyle = style + (style.empty() ? "" : ".") + "check" + state;
+
+        checkBox.checkMark.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(Style::DEFAULT_CHECK_BACKGROUND_COLOR.array);
+        checkBox.checkMark.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(Style::DEFAULT_CHECK_BORDER_COLOR.array);
+
+        checkBox.checkMark.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
+        checkBox.checkMark.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);
+        checkBox.checkMark.borderRadius = getBorderRadius(fullStyle, Style::DEFAULT_BORDER_RADIUS);
+
+        return checkBox;
+    }
     inline Vector2f getCurrentOffset() {
         return subRectOffset;
     }
-    inline Vector2f layoutToPixel(const Layout2D& layout) {
+    inline Vector2f layoutToSize(const Layout2D& layout) {
         return layout.getPixels(subRectStack.top().size);
     }
 
@@ -248,12 +288,9 @@ namespace gauil {
         return false;
     }
 
-    void labelRaw(const std::string& text, const Layout2D& position, const Layout2D& size, const Style::Label& style) {
-        const Vector2f pixPos = layoutToPixel(position);
-        const Vector2f pixSize = layoutToPixel(size);
-
-        const Vector2f textBox = priv::measureText(text, pixSize.min(), getDefaultFont());
-        const FRect textRect(pixPos, pixSize);
+    void labelRaw(const std::string& text, const Vector2f& position, const Vector2f& size, const Style::Label& style) {
+        const Vector2f textBox = priv::measureText(text, size.min(), getDefaultFont());
+        const FRect textRect(position, size);
         const Vector2f compressedDimensions = ((textRect.size) / textBox);
         const float scale = compressedDimensions.min();
         const Vector2f finalTextBox = textBox * scale;
@@ -290,48 +327,76 @@ namespace gauil {
 
 
         // queueRect(textRect, {}, {}, color::FALLBACK, {});
-        queueText(textRect.position + textBoxAlignment, pixSize.min(), scale, text, getDefaultFont(), style.color); // Draw text
+        queueText(textRect.position + textBoxAlignment, size.min(), scale, text, getDefaultFont(), style.color); // Draw text
     }
     void label(const std::string& text, const Layout2D& position, const Layout2D& size) {
         LabelData data(text);
         drawnUIElements.insert(data.getId());
-
-        labelRaw(data.getText(), position, size, getLabelStyle(data.getStyle()));
+        labelRaw(data.getText(), layoutToPosition(position), layoutToSize(size), getLabelStyle(data.getStyle()));
     }
 
-    bool buttonRaw(const std::string& text, const Layout2D& position, const Layout2D& size, const Style::Button& buttonStyle) {
-        Vector2f pixPos = layoutToPosition(position);
-        Vector2f pixSize = layoutToPixel(size);
+    bool buttonRaw(const std::string& text, const Vector2f& position, const Vector2f& size, const Style::Button& buttonStyle) {
 
-        queueRect(FRect{ pixPos, pixSize }, buttonStyle.borderRadius, buttonStyle.border, buttonStyle.backgroundColor, buttonStyle.borderColor);
+        queueRect(FRect{ position, size }, buttonStyle.borderRadius, buttonStyle.border, buttonStyle.backgroundColor, buttonStyle.borderColor);
 
         Vector2f backgroundOffset = Vector2f(buttonStyle.border.left, buttonStyle.border.top);
         Vector2f backgroundBounds = Vector2f(buttonStyle.border.right, buttonStyle.border.bottom);
 
-        Vector2f textOffset = Vector2f(buttonStyle.textPadding.left, buttonStyle.textPadding.top);
-        Vector2f textBounds = Vector2f(buttonStyle.textPadding.right, buttonStyle.textPadding.bottom);
+        Vector2f textOffset = Vector2f(buttonStyle.padding.left, buttonStyle.padding.top);
+        Vector2f textBounds = Vector2f(buttonStyle.padding.right, buttonStyle.padding.bottom);
 
-        const FRect textRect = FRect(pixPos + backgroundOffset + textOffset, pixSize - backgroundOffset - backgroundBounds - textOffset - textBounds);
+        const FRect textRect = FRect(position + backgroundOffset + textOffset, size - backgroundOffset - backgroundBounds - textOffset - textBounds);
         const Vector2f textBox = priv::measureText(text, textRect.size.min(), getDefaultFont());
         if (textBox.min() > 0) {
             labelRaw(text, textRect.position, textRect.size, buttonStyle.label);
         }
-        FRect rect(pixPos, pixSize);
+        FRect rect(position, size);
         return rect.contains((Vector2f)mousePos) && priv::isMouseUp();
     }
     bool button(const std::string& text, const Layout2D& position, const Layout2D& size) {
         LabelData data(text);
         drawnUIElements.insert(data.getId());
         Vector2f pixPos = layoutToPosition(position);
-        Vector2f pixSize = layoutToPixel(size);
-        const std::string& state = [&] {
+        Vector2f pixSize = layoutToSize(size);
+        std::string state = [&] {
             FRect rect(pixPos, pixSize);
             if (rect.contains(static_cast<Vector2f>(mousePos)))
                 return priv::isMouseHeld() ? "|active" : "|hover";
             return "";
             }();
 
-        return buttonRaw(data.getText(), position, size, getButtonStyle(data.getStyle(), state));
+        return buttonRaw(data.getText(), pixPos, pixSize, getButtonStyle(data.getStyle(), state));
+    }
+
+
+    bool checkBoxRaw(bool* _bool, const std::string& style, const Vector2f& position, const Vector2f& size, const Style::CheckBox& checkBox) {
+        queueRect(FRect{ position, size }, checkBox.borderRadius, checkBox.border, checkBox.backgroundColor, checkBox.borderColor);
+        Vector2f backgroundOffset = Vector2f(checkBox.border.left, checkBox.border.top);
+        Vector2f backgroundBounds = Vector2f(checkBox.border.right, checkBox.border.bottom);
+
+        Vector2f textOffset = Vector2f(checkBox.padding.left, checkBox.padding.top);
+        Vector2f textBounds = Vector2f(checkBox.padding.right, checkBox.padding.bottom);
+
+        Vector2f totalOffset = backgroundOffset + textOffset;
+        Vector2f totalBounds = backgroundBounds + textBounds;
+
+        bool clicked = priv::isMouseUp() && FRect(position, size).contains((Vector2f)mousePos);
+        if (clicked)
+            *_bool = !*_bool;
+        if (*_bool)
+            queueRect(FRect{ position + totalOffset, size - totalOffset - totalBounds }, checkBox.checkMark.borderRadius, checkBox.checkMark.border, checkBox.checkMark.backgroundColor, checkBox.checkMark.borderColor);
+        return clicked;
+    }
+    bool checkBox(bool* _bool, const std::string& style, const Layout2D& position, const Layout2D& size) {
+        auto pixPos = layoutToPosition(position);
+        auto pixSize = layoutToSize(size);
+        std::string state = [&] {
+            FRect rect(pixPos, pixSize);
+            if (rect.contains(static_cast<Vector2f>(mousePos)))
+                return priv::isMouseHeld() ? "|active" : "|hover";
+            return "";
+            }();
+        return checkBoxRaw(_bool, style, pixPos, pixSize, getCheckBoxStyle(style, state));
     }
 
 
