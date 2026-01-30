@@ -152,8 +152,8 @@ namespace gauil {
     inline Style::Button getButtonStyle(const std::string& style, const std::string& state) {
         std::string fullStyle = style + (style.empty() ? "" : ".") + "button" + state;
         Style::Button button;
-        button.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(gauil::color::DARK_MODE_BACKGROUND.array);
-        button.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(gauil::color::DARK_MODE_BORDER.array);
+        button.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(Color::DARK_MODE_BACKGROUND.array);
+        button.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(Color::DARK_MODE_BORDER.array);
 
         button.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
         button.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);
@@ -165,8 +165,8 @@ namespace gauil {
     inline Style::CheckBox getCheckBoxStyle(const std::string& style, const std::string& state) {
         std::string fullStyle = style + (style.empty() ? "" : ".") + "check_box" + state;
         Style::CheckBox checkBox;
-        checkBox.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(gauil::color::DARK_MODE_BACKGROUND.array);
-        checkBox.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(gauil::color::DARK_MODE_BORDER.array);
+        checkBox.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(Color::DARK_MODE_BACKGROUND.array);
+        checkBox.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(Color::DARK_MODE_BORDER.array);
 
         checkBox.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
         checkBox.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);

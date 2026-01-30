@@ -26,13 +26,13 @@ namespace gauil {
 
         static constexpr Color DEFAULT_TEXT_COLOR{ 255, 255, 255, 255 };
 
-        static constexpr Color DEFAULT_CHECK_BACKGROUND_COLOR = color::WHITE;
-        static constexpr Color DEFAULT_CHECK_BORDER_COLOR = color::WHITE;
+        static constexpr Color DEFAULT_CHECK_BACKGROUND_COLOR = Color::WHITE;
+        static constexpr Color DEFAULT_CHECK_BORDER_COLOR = Color::WHITE;
 
         
 
         struct Label {
-            Color color = color::WHITE;
+            Color color = Color::WHITE;
             std::string font = "";
 
             VerticalAlignment verticalAlignment = VerticalAlignment::Center;
@@ -46,8 +46,8 @@ namespace gauil {
             FCorners borderRadius = FCorners(DEFAULT_BORDER_RADIUS);
 
 
-            Color borderColor = color::DARK_MODE_BORDER;
-            Color backgroundColor = color::DARK_MODE_BACKGROUND;
+            Color borderColor = Color::DARK_MODE_BORDER;
+            Color backgroundColor = Color::DARK_MODE_BACKGROUND;
 
         };
         struct ButtonBase : Panel {
