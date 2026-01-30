@@ -37,6 +37,7 @@ namespace gauil {
 
             VerticalAlignment verticalAlignment = VerticalAlignment::Center;
             HorizontalAlignment horizontalAlignment = HorizontalAlignment::Center;
+            FEdges padding = FEdges(DEFAULT_PADDING);
         };
         struct Panel {
             FEdges border = FEdges(DEFAULT_BORDER_WIDTH);
