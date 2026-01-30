@@ -5,11 +5,15 @@
     border_color: rgb(25, 75, 196);
     background_color: rgb(57, 57, 57);
     text_color: rgb(255, 244, 244);
-
+    
+    font: "Orange Juice";
+    padding: 1;
+    
     radius: 10000;
-    check_radius: 10000;
 }
-
+bear{
+    font: "Wedgie";
+}
 
 button|hover{
     background_color: rgb(84, 84, 84);
@@ -19,6 +23,9 @@ button|hover{
 check_box{
     radius: 0;
     padding: 10;
+}
+check_box_label{
+    padding: 5;
 }
 check_box|active{
     padding: 5;

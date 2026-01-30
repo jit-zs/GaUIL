@@ -38,7 +38,7 @@ namespace dev {
     }
 
     void drawString(const gauil::Vector2f& pos, uint fontSize, float scale, const std::string& string, const gauil::Color& color, const std::any& font, const std::any& userData) {
-        sf::Text text(*std::any_cast<sf::Font*>(font), string);
+        sf::Text text(*std::any_cast<std::shared_ptr<sf::Font>>(font), string);
         text.setCharacterSize(fontSize);
 
         text.setScale({ scale, scale });
@@ -49,13 +49,19 @@ namespace dev {
     }
 
     gauil::Vector2f measureText(const std::string& string, uint fontSize, const std::any& font, const std::any& userData) {
-        sf::Text text(*std::any_cast<sf::Font*>(font), string);
+        sf::Text text(*std::any_cast<std::shared_ptr<sf::Font>>(font), string);
         text.setCharacterSize(fontSize);
 
         sf::FloatRect bounds = text.getLocalBounds();
         return bounds.size;
     }
 
+    std::any loadFontFromFile(const std::string& file) {
+        std::shared_ptr<sf::Font> font = std::make_shared<sf::Font>();
+        if (!font->openFromFile(file))
+            return gauil::getDefaultFont();
+        return font;
+    }
 }
 sf::RenderWindow* window;
 
@@ -85,7 +91,8 @@ void options() {
         uiStack.pop();
     }
     static bool vsync = false;
-    gauil::checkBox(&vsync, "", {40_percent, 40_percent}, {20_percent, gauil::OTHER_LAYOUT});
+    gauil::checkBox(&vsync, "", { 40_percent, 10_percent }, { 5_percent, gauil::OTHER_LAYOUT });
+    gauil::label("VSync[@@]check_box_label", { 45_percent, 10_percent }, { 15_percent, gauil::scaleWithOpposingAxis(5_percent) });
 }
 
 void initCallbacks() {
@@ -108,9 +115,9 @@ void initCallbacks() {
     gauil::setMousePositionFn([] {
         return sf::Mouse::getPosition(*window);
         });
-
+    gauil::setFontFileLoaderFn(dev::loadFontFromFile);
     gauil::setDrawUserData(static_cast<sf::RenderWindow*>(window));
-
+    
 
 }
 
@@ -123,18 +130,20 @@ int main() {
     window->create(fullscreenModes[0], "Dev", sf::State::Windowed, windowSettings);
 
 
+    std::shared_ptr<sf::Font> font = std::make_shared<sf::Font>();
+    if (!font->openFromFile("/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf"));
+    gauil::setDefaultFont(font);
 
-    sf::Font font;
-    if (!font.openFromFile("/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf"));
-
-    gauil::setDefaultFont(static_cast<sf::Font*>(&font));
 
     initCallbacks();
 
     gauil::init();
+    gauil::loadFont("orange-juice/orange juice 2.0.ttf", "Orange Juice");
+    gauil::loadFont("Wedgie Regular.ttf", "Wedgie");
 
 
     gauil::loadStyle("theme.simss");
+
 
 
 
@@ -150,8 +159,8 @@ int main() {
                 view.setCenter(view.getSize() / 2.f);
                 window->setView(view);
             }
-            else if (auto key = ev->getIf<sf::Event::KeyReleased>()){
-                if (key->code == sf::Keyboard::Key::Escape){
+            else if (auto key = ev->getIf<sf::Event::KeyReleased>()) {
+                if (key->code == sf::Keyboard::Key::Escape) {
                     window->close();
                 }
             }
@@ -169,7 +178,7 @@ int main() {
 
 
         window->display();
-        window->clear(sf::Color::Green);
+        window->clear(sf::Color(30, 20, 60));
 
     }
 
