@@ -9,6 +9,10 @@ namespace gauil {
         return from + point * (to - from);
     }
     template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
+    T make01(T min, T max, T val) {
+        return (val - min) / (max - min);
+    }
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
     T clamp(T min, T max, T val) {
         return std::max(min, std::min(max, val));
     }
