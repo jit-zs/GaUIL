@@ -152,8 +152,8 @@ namespace gauil {
     inline Style::Button getButtonStyle(const std::string& style, const std::string& state) {
         std::string fullStyle = style + (style.empty() ? "" : ".") + "button" + state;
         Style::Button button;
-        button.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(Color::DARK_MODE_BACKGROUND.array);
-        button.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(Color::DARK_MODE_BORDER.array);
+        button.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(DARK_MODE_BACKGROUND.array);
+        button.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(DARK_MODE_BORDER.array);
 
         button.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
         button.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);
@@ -165,8 +165,8 @@ namespace gauil {
     inline Style::CheckBox getCheckBoxStyle(const std::string& style, const std::string& state) {
         std::string fullStyle = style + (style.empty() ? "" : ".") + "check_box" + state;
         Style::CheckBox checkBox;
-        checkBox.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(Color::DARK_MODE_BACKGROUND.array);
-        checkBox.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(Color::DARK_MODE_BORDER.array);
+        checkBox.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(DARK_MODE_BACKGROUND.array);
+        checkBox.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(DARK_MODE_BORDER.array);
 
         checkBox.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
         checkBox.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);
@@ -182,6 +182,27 @@ namespace gauil {
         checkBox.checkMark.borderRadius = getBorderRadius(fullStyle, Style::DEFAULT_BORDER_RADIUS);
 
         return checkBox;
+    }
+    inline Style::Slider getSliderStyle(const std::string& style, const std::string& state) {
+        std::string fullStyle = style + (style.empty() ? "" : ".") + "slider" + state;
+        Style::Slider slider;
+        slider.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(DARK_MODE_BACKGROUND.array);
+        slider.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(DARK_MODE_BORDER.array);
+
+        slider.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
+        slider.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);
+        slider.borderRadius = getBorderRadius(fullStyle, Style::DEFAULT_BORDER_RADIUS);
+
+        fullStyle = style + (style.empty() ? "" : ".") + "slider_handle" + state;
+
+        slider.handle.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(Style::DEFAULT_CHECK_BACKGROUND_COLOR.array);
+        slider.handle.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(Style::DEFAULT_CHECK_BORDER_COLOR.array);
+
+        slider.handle.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
+        slider.handle.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);
+        slider.handle.borderRadius = getBorderRadius(fullStyle, Style::DEFAULT_BORDER_RADIUS);
+
+        return slider;
     }
 #pragma endregion
     inline Vector2f getCurrentOffset() {
@@ -429,6 +450,39 @@ namespace gauil {
             return "";
             }();
         return checkBoxRaw(_bool, style, pixPos, pixSize, getCheckBoxStyle(style, state));
+    }
+
+    void sliderRaw(float* value, float min, float max, const Vector2f& position, const Vector2f& size, const Style::Slider& style) {
+        GAUIL_ASSERT(max != min, "Slider max and min cannot be equal");
+        queueRect(FRect{ position, size }, style.borderRadius, style.border, style.backgroundColor, style.borderColor);
+
+
+
+        Vector2f handleSize = Vector2f(size.y, size.y) - style.padding.getOffset() - style.padding.getBounds();
+        Vector2f handlePosition = position + style.padding.getOffset() + Vector2f(*value / (max - min)  * (size.x - handleSize.x), 0);
+        if ((priv::isMouseDown() || priv::isMouseHeld()) && FRect { position, size }.contains((Vector2f)mousePos)) {
+            FRect rect(position + style.padding.getOffset(), size - style.padding.getOffset() - style.padding.getBounds());
+            if (rect.contains((Vector2f)mousePos)) {
+                float relativeX = (mousePos.x - rect.position.x) / rect.size.x;
+                *value = min + (relativeX * (max - min));
+                *value = std::clamp(*value, min, max);
+            }
+        }
+        queueRect(FRect{ handlePosition, handleSize }, style.handle.borderRadius, style.handle.border, style.handle.backgroundColor, style.handle.borderColor);
+
+    }
+    void slider(float* value, const std::string& style, float min, float max, const Layout2D& position, const Layout2D& size) {
+        auto pixPos = layoutToPosition(position);
+        auto pixSize = layoutToSize(size);
+        std::string state = [&] {
+            FRect rect;
+            rect.position = pixPos + Vector2f(lerp(min, max, *value) * (pixSize.x - pixSize.y), 0);
+            rect.size = { pixSize.y, pixSize.y };
+            if (rect.contains(static_cast<Vector2f>(mousePos)))
+                return priv::isMouseHeld() ? "|active" : "|hover";
+            return "";
+            }();
+        sliderRaw(value, min, max, pixPos, pixSize, getSliderStyle(style, state));
     }
 #pragma endregion
 
