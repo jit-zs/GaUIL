@@ -3,7 +3,7 @@
 
 #include <algorithm>
 namespace gauil {
-    Style::ButtonBase::~ButtonBase() {}
+
 
     Style::Style(){
         hovererdButton.backgroundColor = Color(156, 156, 156);

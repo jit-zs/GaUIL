@@ -71,14 +71,17 @@ namespace gauil {
     bool button(const std::string& text, const Layout2D& position, const Layout2D& size);
 
 
-    
+
     /// @brief 
-    /// @param _bool 
+    /// @param value 
     /// @param style 
     /// @param position 
     /// @param size 
     /// @returns if the box was clicked this frame 
-    bool checkBox(bool* _bool, const std::string& style, const Layout2D& position, const Layout2D& size);
+    bool checkBox(bool* value, const std::string& style, const Layout2D& position, const Layout2D& size);
+
+
+    void slider(float* value, const std::string& style, float min, float max, const Layout2D& position, const Layout2D& size);
 
     void setWindowSizeFn(const std::function<GetWindowSizeCallback>& fn);
     [[nodiscard]] std::function<GetWindowSizeCallback> getWindowSizeFn();
@@ -95,7 +98,7 @@ namespace gauil {
     void setFontMemoryLoaderFn(const std::function<LoadFontFromMemoryCallback>& fn);
     [[nodiscard]] std::function<LoadFontFromMemoryCallback> getFontMemoryLoaderFn();
 
-    
+
     void pushSubRect(const Layout2D& position, const Layout2D& size);
     void popSubRect();
     namespace priv {
