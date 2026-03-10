@@ -34,13 +34,14 @@ add_library(${PROJECT_NAME} STATIC
 target_link_libraries(${PROJECT_NAME} PRIVATE SimpleSS)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
-
-add_executable(dev dev/main.cpp)
-target_link_libraries(dev PRIVATE
-    SFML::System
-    SFML::Window
-    SFML::Graphics
-    SFML::Network
-    SFML::Audio
-    ${PROJECT_NAME}
-    )
+if (COMPILE_DEV EQUAL ON)
+    add_executable(dev dev/main.cpp)
+    target_link_libraries(dev PRIVATE
+        SFML::System
+        SFML::Window
+        SFML::Graphics
+        SFML::Network
+        SFML::Audio
+        ${PROJECT_NAME}
+        )
+endif()
