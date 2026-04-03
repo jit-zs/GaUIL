@@ -62,6 +62,8 @@ namespace gauil {
     /// @param text 
     void label(const std::string& text, const Layout2D& position, const  Layout2D& size);
 
+    /// @brief Draws a panel
+    void panel(const Layout2D& position, const Layout2D& size, const std::string& style = "");
 
     /// @brief Draws a button
     /// @param position 

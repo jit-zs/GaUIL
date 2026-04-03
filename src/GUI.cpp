@@ -102,6 +102,7 @@ namespace gauil {
     static std::function<IsMousePressedCallback> mousePressedFn;
     static std::function<LoadFontFromFileCallback> fontFileLoaderFn;
     static std::function<LoadFontFromMemoryCallback> fontMemoryLoaderFn;
+
 #pragma region Style
     inline FEdges getBorder(const std::string& style, float _default) {
         FEdges result;
@@ -148,6 +149,18 @@ namespace gauil {
         std::string vtAlignment = gauil::style.getValue(fullStyle, "vertical_alignment").asString();
         label.verticalAlignment = vtAlignment == "top" ? VerticalAlignment::Top : vtAlignment == "bottom" ? VerticalAlignment::Bottom : VerticalAlignment::Center;
         return label;
+    }
+    inline Style::Panel getPanelStyle(const std::string& style, const std::string& state) {
+        std::string fullStyle = style + (style.empty() ? "" : ".") + "panel" + state;
+        Style::Panel panel;
+        panel.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(DARK_MODE_BACKGROUND.array);
+        panel.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(DARK_MODE_BORDER.array);
+
+        panel.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
+        panel.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);
+        panel.borderRadius = getBorderRadius(fullStyle, Style::DEFAULT_BORDER_RADIUS);
+
+        return panel;
     }
     inline Style::Button getButtonStyle(const std::string& style, const std::string& state) {
         std::string fullStyle = style + (style.empty() ? "" : ".") + "button" + state;
@@ -218,6 +231,12 @@ namespace gauil {
     /// @return 
     inline Vector2f layoutToPosition(const Layout2D& layout) {
         return layout.getPixels(subRectStack.top().size) + subRectOffset;
+    }
+    std::string getMouseState(const Layout2D& position, const Layout2D& size) {
+        FRect rect(layoutToPosition(position), layoutToSize(size));
+        if (rect.contains(static_cast<Vector2f>(mousePos)))
+            return priv::isMouseHeld() ? "|active" : "|hover";
+        return "";
     }
 #pragma region Drawing
     void queueTriangleList(const std::vector<Vertex>& vertices, const Color& color) {
@@ -388,9 +407,16 @@ namespace gauil {
         labelRaw(data.getText(), layoutToPosition(position), layoutToSize(size), getLabelStyle(data.getStyle()));
     }
 
+    void panelRaw(const Vector2f& position, const Vector2f& size, const Style::Panel& style) {
+        queueRect(FRect(position, size), style.borderRadius, style.border, style.backgroundColor, style.borderColor);
+    }
+    void panel(const Layout2D& position, const Layout2D& size, const std::string& style) {
+        std::string state = getMouseState(position, size);
+        panelRaw(layoutToPosition(position), layoutToSize(size), getPanelStyle(style, state));
+    }
     bool buttonRaw(const std::string& text, const Vector2f& position, const Vector2f& size, const Style::Button& buttonStyle) {
 
-        queueRect(FRect{ position, size }, buttonStyle.borderRadius, buttonStyle.border, buttonStyle.backgroundColor, buttonStyle.borderColor);
+        queueRect(FRect(position, size), buttonStyle.borderRadius, buttonStyle.border, buttonStyle.backgroundColor, buttonStyle.borderColor);
 
         Vector2f backgroundOffset = Vector2f(buttonStyle.border.left, buttonStyle.border.top);
         Vector2f backgroundBounds = Vector2f(buttonStyle.border.right, buttonStyle.border.bottom);
@@ -411,12 +437,7 @@ namespace gauil {
         drawnUIElements.insert(data.getId());
         Vector2f pixPos = layoutToPosition(position);
         Vector2f pixSize = layoutToSize(size);
-        std::string state = [&] {
-            FRect rect(pixPos, pixSize);
-            if (rect.contains(static_cast<Vector2f>(mousePos)))
-                return priv::isMouseHeld() ? "|active" : "|hover";
-            return "";
-            }();
+        std::string state = getMouseState(position, size);
 
         return buttonRaw(data.getText(), pixPos, pixSize, getButtonStyle(data.getStyle(), state));
     }
@@ -443,12 +464,7 @@ namespace gauil {
     bool checkBox(bool* _bool, const std::string& style, const Layout2D& position, const Layout2D& size) {
         auto pixPos = layoutToPosition(position);
         auto pixSize = layoutToSize(size);
-        std::string state = [&] {
-            FRect rect(pixPos, pixSize);
-            if (rect.contains(static_cast<Vector2f>(mousePos)))
-                return priv::isMouseHeld() ? "|active" : "|hover";
-            return "";
-            }();
+        std::string state = getMouseState(position, size);
         return checkBoxRaw(_bool, style, pixPos, pixSize, getCheckBoxStyle(style, state));
     }
 
@@ -459,7 +475,7 @@ namespace gauil {
 
 
         Vector2f handleSize = Vector2f(size.y, size.y) - style.padding.getOffset() - style.padding.getBounds();
-        Vector2f handlePosition = position + style.padding.getOffset() + Vector2f(*value / (max - min)  * (size.x - handleSize.x), 0);
+        Vector2f handlePosition = position + style.padding.getOffset() + Vector2f(*value / (max - min) * (size.x - handleSize.x), 0);
         if ((priv::isMouseDown() || priv::isMouseHeld()) && FRect { position, size }.contains((Vector2f)mousePos)) {
             FRect rect(position + style.padding.getOffset(), size - style.padding.getOffset() - style.padding.getBounds());
             if (rect.contains((Vector2f)mousePos)) {
