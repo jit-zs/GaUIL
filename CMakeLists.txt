@@ -22,7 +22,7 @@ FetchContent_Declare(
     GIT_TAG v0.0.3
 )
 
-FetchContent_MakeAvailable(sfml SimpleSS)
+FetchContent_MakeAvailable(SimpleSS)
 
 
 
@@ -34,7 +34,8 @@ add_library(${PROJECT_NAME} STATIC
 target_link_libraries(${PROJECT_NAME} PRIVATE SimpleSS)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
-if (COMPILE_DEV EQUAL ON)
+if (COMPILE_DEV)
+    FetchContent_MakeAvailable(sfml)
     add_executable(dev dev/main.cpp)
     target_link_libraries(dev PRIVATE
         SFML::System
