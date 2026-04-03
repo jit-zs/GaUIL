@@ -14,8 +14,8 @@ namespace dev {
         for (size_t i = 0; i < vertexCount; ++i) {
             vertArr[i].position = vertices[i].position;
             vertArr[i].color = color;
-            vertArr[i].texCoords = vertices[i].texCoords;
-        }
+                vertArr[i].texCoords = vertices[i].texCoords;
+            }
 
 
 
@@ -72,6 +72,7 @@ void mainMenu();
 void options();
 
 void mainMenu() {
+    gauil::panel({ 10_percent, 10_percent }, { 80_percent, 30_percent }, "panel");
     gauil::label("Dev[$$]Hi[@@]bear", { 10_percent, 10_percent }, { 80_percent, 30_percent });
 
     if (gauil::button("Start", { 45_percent, 50_percent }, { 10_percent, 4_percent })) {
@@ -90,9 +91,15 @@ void options() {
     if (gauil::button("Back[@@]back", { 0, 0 }, { 5_percent, 5_percent })) {
         uiStack.pop();
     }
+    
     static bool vsync = false;
+    gauil::label("VSync[@@]options", { 0_percent, 10_percent }, { 15_percent, gauil::scaleWithOpposingAxis(5_percent) });
     gauil::checkBox(&vsync, "", { 40_percent, 10_percent }, { 5_percent, gauil::OTHER_LAYOUT });
-    gauil::label("VSync[@@]check_box_label", { 45_percent, 10_percent }, { 15_percent, gauil::scaleWithOpposingAxis(5_percent) });
+
+    static float volume = 50.f;
+    gauil::label("Volume[@@]options", { 0_percent, 20_percent }, { 15_percent, gauil::scaleWithOpposingAxis(5_percent) });
+    gauil::slider(&volume, "", 0.f, 100.f, { 40_percent, 20_percent }, { 30_percent, gauil::scaleWithOpposingAxis(5_percent) });
+                
 }
 
 void initCallbacks() {
@@ -117,7 +124,7 @@ void initCallbacks() {
         });
     gauil::setFontFileLoaderFn(dev::loadFontFromFile);
     gauil::setDrawUserData(static_cast<sf::RenderWindow*>(window));
-    
+
 
 }
 
@@ -168,11 +175,7 @@ int main() {
 
         gauil::update();
 
-
         uiStack.top()();
-
-        gauil::priv::roundRect({ 200, 300, 300, 300 }, gauil::FCorners(1000, 10, 0, 10), gauil::FEdges(10, 10, 10, 0), gauil::color::DARK_MODE_BACKGROUND, gauil::color::DARK_MODE_BORDER);
-        // gauil::priv::roundRect({600, 200, 200, 200}, {}, gauil::FEdges(10), gauil::color::DARK_MODE_BACKGROUND, gauil::color::DARK_MODE_BORDER);
 
         gauil::draw();
 
