@@ -14,7 +14,7 @@ namespace gauil {
         T x = 0;
         T y = 0;
 
-        inline static constexpr Vector2 ZERO = { 0, 0 };
+        inline static const Vector2 ZERO = { 0, 0 };
         constexpr Vector2(T x, T y) : x(x), y(y) {}
         constexpr Vector2() = default;
 #if __has_include(<SFML/System/Vector2.hpp>)
