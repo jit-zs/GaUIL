@@ -43,7 +43,8 @@ namespace gauil {
     std::any getDrawUserData();
 
     // Default font should be set before initialization
-    void setDefaultFont(const std::any& font);
+    void setDefaultFont(const std::string& file);
+    void setDefaultFont(const void* data, size_t length);
     std::any getDefaultFont();
 
     namespace priv {

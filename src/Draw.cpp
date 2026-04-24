@@ -1,6 +1,7 @@
 #include <GaUIL/Draw.hpp>
 #include <GaUIL/Assert.hpp>
 #include <GaUIL/Corners.hpp>
+#include <GaUIL/GUI.hpp>
 #include <GaUIL/Math.hpp>
 
 #include <algorithm>
@@ -74,8 +75,13 @@ namespace gauil {
         return drawUserData;
     }
 
-    void setDefaultFont(const std::any& font) {
-        defaultFont = font;
+    void setDefaultFont(const std::string& file) {
+        GAUIL_ASSERT(getFontFileLoaderFn(), "No font file loader has been set");
+        defaultFont = getFontFileLoaderFn()(file);
+    }
+    void setDefaultFont(const void* data, size_t len){
+        GAUIL_ASSERT(getFontMemoryLoaderFn(), "No font memory loader has been set");
+        defaultFont = getFontMemoryLoaderFn()(data, len);
     }
     std::any getDefaultFont() {
         return defaultFont;
