@@ -33,7 +33,9 @@ namespace gauil {
 #endif
 
     };
+    inline constexpr Color RED = Color(255, 55, 55);
     inline constexpr Color GREEN = Color(55, 255, 55);
+    inline constexpr Color BLUE = Color(55, 55, 255);
     inline constexpr Color WHITE = Color(255, 255, 255);
     inline constexpr Color BLACK = Color(0, 0, 0);
     inline constexpr Color DARK_MODE_BORDER = Color(32, 32, 32);
