@@ -149,11 +149,11 @@ namespace gauil {
         // TODO: Borders
         void roundRect(const FRect& rect, const FCorners& radius, const FEdges& borders, const Color& backgroundColor, const Color& borderColor) {
 
-            static constexpr int DETAIL = 16; // Amount of vertices on each corner
-            std::vector<Vertex> vertices(DETAIL * 4 + 2);
+            static constexpr int DETAIL = 8; // Amount of vertices on each corner
+            std::vector<Vertex> vertices(DETAIL * 4 + 3);
             std::vector<Vertex> borderVertices;
             vertices[0].position = rect.getCenter();
-            for (size_t i = 0; i < DETAIL * 4 + 1; i++) {
+            for (size_t i = 0; i < DETAIL * 4 + 2; i++) {
                 Vector2f quadrant;
                 int quad = i / DETAIL;
                 float cornerRadius = radius.topRight;
@@ -176,7 +176,7 @@ namespace gauil {
                     quadrant = { 1, -1 };
                     break;
                 };
-                const float angle = float(i) / float(DETAIL * 4) * M_PI * 2;
+                const float angle = (float(i) / float(DETAIL * 4) * M_PI * 2);
 
                 cornerRadius = std::max(0.f, std::min(rect.h * .5f, std::min(rect.w * .5f, cornerRadius)));
                 Vertex& vertex = vertices[i + 1];
@@ -192,7 +192,19 @@ namespace gauil {
                 }
 
             }
-            // drawRect(rect, color::FALLBACK);
+            // For debugging purposes
+            // drawRect(rect, FALLBACK);
+
+            auto v = vertices[0];
+            vertices.erase(vertices.begin());
+            std::reverse(vertices.begin(), vertices.end());
+            vertices.insert(vertices.begin(), v);
+
+            v = borderVertices[0];
+            borderVertices.erase(borderVertices.begin());
+            std::reverse(borderVertices.begin(), borderVertices.end());
+            borderVertices.insert(borderVertices.begin(), v);
+
             if (!borders.isZero())
                 drawTriangleStrip(borderVertices.data(), borderVertices.size(), borderColor);
             drawTriangleFan(vertices.data(), vertices.size(), backgroundColor);
