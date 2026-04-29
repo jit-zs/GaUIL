@@ -91,7 +91,7 @@ namespace gauil {
                 march.x += (xAdv) ;
                 if (text[i + 1] != '\n' && text[i + 1] != '\0' && stbtt_GetKerningTableLength(&mFont) > 0) {
                     int kern = stbtt_GetCodepointKernAdvance(&mFont, text[i], text[i + 1]);
-                    march.x -= (kern) * textScale;
+                    march.x += (kern) * textScale;
                 }
                 
 
@@ -131,7 +131,7 @@ namespace gauil {
                     currentXMarch += xAdv;
                     if (i < text.length() - 1 && stbtt_GetKerningTableLength(&mFont) > 0) {
                         int kern = stbtt_GetCodepointKernAdvance(&mFont, text[i], text[i + 1]);
-                        currentXMarch -= kern * textScale;
+                        currentXMarch += kern * textScale;
                     }
                 }
                 else {
