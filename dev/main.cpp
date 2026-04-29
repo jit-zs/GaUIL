@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <GaUIL/GaUIL.hpp>
+#include <GaUIL/Draw.hpp>
 
 #include <fstream>
 #include <stack>
@@ -14,8 +15,7 @@ namespace dev {
         for (size_t i = 0; i < vertexCount; ++i) {
             vertArr[i].position = vertices[i].position;
             vertArr[i].color = color;
-                vertArr[i].texCoords = vertices[i].texCoords;
-            }
+        }
 
 
 
@@ -56,11 +56,29 @@ namespace dev {
         return bounds.size;
     }
 
-    std::any loadFontFromFile(const std::string& file) {
+    std::optional<std::any> loadFontFromFile(const std::string& file) {
         std::shared_ptr<sf::Font> font = std::make_shared<sf::Font>();
         if (!font->openFromFile(file))
-            return gauil::getDefaultFont();
+            return {};
         return font;
+    }
+
+    std::optional<std::any> loadTexture(const uint8_t* pixels, int width, int height) {
+        sf::Image image;
+        image.resize({ width, height }, pixels);
+        std::shared_ptr<sf::Texture> texture = std::make_shared<sf::Texture>();
+        if (!texture->loadFromImage(image))
+            return {};
+        return texture;
+    }
+    void drawTexture(const std::any& texture, const gauil::Vector2f& position, const gauil::Vector2f& scale, const gauil::Color& color, const std::any& userData) {
+        sf::Sprite sprite(*std::any_cast<std::shared_ptr<sf::Texture>>(texture));
+        sprite.setPosition(position);
+        sprite.setScale(scale);
+        sprite.setColor(color);
+
+        sf::RenderWindow* window = std::any_cast<sf::RenderWindow*>(userData);
+        window->draw(sprite);
     }
 }
 sf::RenderWindow* window;
@@ -73,7 +91,7 @@ void options();
 
 void mainMenu() {
     gauil::panel({ 10_percent, 10_percent }, { 80_percent, 30_percent }, "panel");
-    gauil::label("Dev[$$]Hi[@@]bear", { 10_percent, 10_percent }, { 80_percent, 30_percent });
+    gauil::label("Orange Juice[$$]Hi[@@]bear", { 10_percent, 10_percent }, { 80_percent, 30_percent });
 
     if (gauil::button("Start", { 45_percent, 50_percent }, { 10_percent, 4_percent })) {
         printf("Start\n");
@@ -91,7 +109,7 @@ void options() {
     if (gauil::button("Back[@@]back", { 0, 0 }, { 5_percent, 5_percent })) {
         uiStack.pop();
     }
-    
+
     static bool vsync = false;
     gauil::label("VSync[@@]options", { 0_percent, 10_percent }, { 15_percent, gauil::scaleWithOpposingAxis(5_percent) });
     gauil::checkBox(&vsync, "", { 40_percent, 10_percent }, { 5_percent, gauil::OTHER_LAYOUT });
@@ -99,7 +117,7 @@ void options() {
     static float volume = 50.f;
     gauil::label("Volume[@@]options", { 0_percent, 20_percent }, { 15_percent, gauil::scaleWithOpposingAxis(5_percent) });
     gauil::slider(&volume, "", 0.f, 100.f, { 40_percent, 20_percent }, { 30_percent, gauil::scaleWithOpposingAxis(5_percent) });
-                
+
 }
 
 void initCallbacks() {
@@ -109,9 +127,6 @@ void initCallbacks() {
 
     gauil::setRectDrawFn(dev::drawRect);
 
-    gauil::setTextDrawFn(dev::drawString);
-
-    gauil::setMeasureTextFn(dev::measureText);
 
     gauil::setWindowSizeFn([] {
         return window->getSize();
@@ -122,9 +137,10 @@ void initCallbacks() {
     gauil::setMousePositionFn([] {
         return sf::Mouse::getPosition(*window);
         });
-    gauil::setFontFileLoaderFn(dev::loadFontFromFile);
-    gauil::setDrawUserData(static_cast<sf::RenderWindow*>(window));
+    gauil::setLoadTextureFn(dev::loadTexture);
+    gauil::setDrawTextureFn(dev::drawTexture);
 
+    gauil::setDrawUserData(static_cast<sf::RenderWindow*>(window));
 
 }
 
@@ -134,25 +150,34 @@ int main() {
     sf::ContextSettings windowSettings;
     windowSettings.antiAliasingLevel = 0;
     window = new sf::RenderWindow();
-    window->create(fullscreenModes[0], "Dev", sf::State::Windowed, windowSettings);
+    window->create(fullscreenModes[0], "GaUIL Dev", sf::State::Windowed, windowSettings);
 
-
-    std::shared_ptr<sf::Font> font = std::make_shared<sf::Font>();
-    if (!font->openFromFile("/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf"));
-    gauil::setDefaultFont(font);
 
 
     initCallbacks();
+
+    gauil::setDefaultFont("/usr/share/fonts/truetype/noto/NotoMono-Regular.ttf");
 
     gauil::init();
     gauil::loadFont("orange-juice/orange juice 2.0.ttf", "Orange Juice");
     gauil::loadFont("Wedgie Regular.ttf", "Wedgie");
 
 
-    gauil::loadStyle("theme.simss");
+    std::string theme;
+    std::ifstream stream("theme.simss");
+    std::getline(stream, theme, '\0');
+    gauil::loadStyle(theme);
+    stream.close();
 
 
+    stream.open("orange-juice/orange juice 2.0.ttf", std::ios::binary);
+    std::vector<uint8_t> buf(std::filesystem::file_size("orange-juice/orange juice 2.0.ttf"));
+    stream.read((char*)buf.data(), buf.size());
+    stream.close();
 
+    gauil::IFont* font = gauil::loadFont(buf.data(), buf.size());
+    sf::Font f;
+    f.openFromMemory(buf.data(), buf.size());
 
     uiStack.push(mainMenu);
     while (window->isOpen()) {
@@ -178,7 +203,6 @@ int main() {
         uiStack.top()();
 
         gauil::draw();
-
 
         window->display();
         window->clear(sf::Color(30, 20, 60));
