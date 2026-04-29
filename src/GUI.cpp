@@ -317,6 +317,7 @@ namespace gauil {
     }
 
     void pushSubRect(const Layout2D& position, const Layout2D& size) {
+        GAUIL_ASSERT(uiActive, "Can only push sub rects between update and draw");
         const FRect& rect = subRectStack.top();
 
         Vector2f offset = position.getPixels(rect.size);
@@ -324,6 +325,7 @@ namespace gauil {
         subRectOffset += offset;
     }
     void popSubRect() {
+        GAUIL_ASSERT(uiActive, "Can only pop sub rects between update and draw");
         GAUIL_ASSERT(subRectStack.size() > 1, "Sub rect stack underflow");
         const FRect& rect = subRectStack.top();
         subRectOffset -= rect.position;
