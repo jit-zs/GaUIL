@@ -23,32 +23,22 @@ namespace gauil {
     /// @note Make sure that this function returns false if the window is not focused
     typedef bool(IsMousePressedCallback)();
 
-    /// @brief Callback to load a font from file
-    /// @note The result of this function will be passed directly to the text draw and measure functions/callbacks   
-    /// @returns A font object constructed from the given file path or an empty std::any on failure
-    typedef std::any(LoadFontFromFileCallback)(const std::string& file);
-
-    /// @brief Callback to load a font from memory
-    /// @note The result of this function will be passed directly to the text draw and measure functions/callbacks   
-    /// @returns A font object constructed from the given memory block or an empty std::any on failure
-    typedef std::any(LoadFontFromMemoryCallback)(const void* data, size_t length);
-
 
     /// @brief Initializes the UI and makes sure that all callbacks have been set
     /// @note Only one of the font loaders callbacks need to be set
     void init();
     void cleanup();
 
-    /// @brief Loads a font from file and adds it to the font list
-    /// @returns True on success
-    bool loadFont(const std::string& file, const std::string& name);
+    /// @brief Load a font from a file and adds it to the font list
+    /// @return True on success
+    bool loadFont(const std::string& file, const std::string& referenceName);
     /// @brief Loads a font from memory and adds it to the font list
     /// @returns True on success
-    bool loadFont(const void* data, size_t length, const std::string& name);
+    bool loadFont(const uint8_t* data, size_t length, const std::string& referenceName);
 
-    /// @brief Loads Simple Style Sheet from file
+    /// @brief Loads Simple Style Sheet from string
     /// @returns true on success else false
-    bool loadStyle(const std::string& file);
+    bool loadStyle(const std::string& string);
 
     /// @brief Prepares the GUI system for a new frame
     void update();
@@ -93,12 +83,6 @@ namespace gauil {
 
     void setMouseDownFn(const std::function<IsMousePressedCallback>& fn);
     [[nodiscard]] std::function<IsMousePressedCallback> getMouseDownFn();
-
-    void setFontFileLoaderFn(const std::function<LoadFontFromFileCallback>& fn);
-    [[nodiscard]] std::function<LoadFontFromFileCallback> getFontFileLoaderFn();
-
-    void setFontMemoryLoaderFn(const std::function<LoadFontFromMemoryCallback>& fn);
-    [[nodiscard]] std::function<LoadFontFromMemoryCallback> getFontMemoryLoaderFn();
 
 
     void pushSubRect(const Layout2D& position, const Layout2D& size);

@@ -2,9 +2,12 @@
 #include <GaUIL/Assert.hpp>
 #include <GaUIL/Draw.hpp>
 #include <GaUIL/Style.hpp>
+#include <GaUIL/Text.hpp>
 
 #include <algorithm>
 #include <any>
+#include <filesystem>
+#include <fstream>
 #include <map>
 #include <optional>
 #include <set>
@@ -35,7 +38,7 @@ namespace gauil {
         Color borderColor;
         float textScale = 1;
         std::string text;
-        std::any font;
+        IFont* font;
         FCorners borderRadius;
         FEdges borderWidth;
         std::vector<Vertex> vertices;
@@ -79,7 +82,7 @@ namespace gauil {
         }
     };
 
-    static std::map<std::string, std::any> fonts;
+    static std::map<std::string, IFont*> fonts;
 
     static Vector2u windowSize;
     static Vector2i mousePos;
@@ -100,8 +103,6 @@ namespace gauil {
     static std::function<GetWindowSizeCallback> windowSizeFn;
     static std::function<GetMousePositionCallback> mousePosFn;
     static std::function<IsMousePressedCallback> mousePressedFn;
-    static std::function<LoadFontFromFileCallback> fontFileLoaderFn;
-    static std::function<LoadFontFromMemoryCallback> fontMemoryLoaderFn;
 
 #pragma region Style
     inline FEdges getBorder(const std::string& style, float _default) {
@@ -276,7 +277,7 @@ namespace gauil {
 
 
 
-    void queueText(const Vector2f& pos, uint fontSize, float scale, const std::string& text, const std::any& font, const Color& color) {
+    void queueText(const Vector2f& pos, uint fontSize, float scale, const std::string& text, IFont* font, const Color& color) {
         DrawCall drawCall;
         drawCall.type = DrawCall::Text;
         drawCall.textPos = pos;
@@ -289,7 +290,7 @@ namespace gauil {
     }
 #pragma endregion
     void init() {
-        GAUIL_ASSERT(getDefaultFont().has_value(), "No default font has been chosen");
+        GAUIL_ASSERT(getDefaultFont(), "No default font has been chosen");
 
         GAUIL_ASSERT(getWindowSizeFn(), "No window size function has been set");
         GAUIL_ASSERT(getMousePositionFn(), "No mouse position function has been set");
@@ -300,12 +301,13 @@ namespace gauil {
         GAUIL_ASSERT(getTriangleStripDrawFn(), "No triangle strip draw function has been set");
 
         GAUIL_ASSERT(getRectDrawFn(), "No rect draw function has been set");
-        GAUIL_ASSERT(getTextDrawFn(), "No text draw function has been set");
-        GAUIL_ASSERT(getMeasureTextFn(), "No measure text function has been set");
 
-        GAUIL_ASSERT(getFontFileLoaderFn() || getFontMemoryLoaderFn(), "Neither font loader function has been set")
 
-            subRectStack.push({ {}, (Vector2f)windowSizeFn() });
+        GAUIL_ASSERT(getLoadTextureFn(), "No load texture function has been set");
+        GAUIL_ASSERT(getDrawTextureFn(), "No draw texture function has been set");
+
+
+        subRectStack.push({ {}, (Vector2f)windowSizeFn() });
         subRectOffset = Vector2f::ZERO;
 
         style = simss::StyleSheet();
@@ -329,7 +331,7 @@ namespace gauil {
     }
 #pragma region Loaders
     bool loadStyle(const std::string& styleSheet) {
-        auto newStyle = simss::loadFromFile(styleSheet);
+        auto newStyle = simss::loadFromString(styleSheet);
         if (newStyle) {
             gauil::style = newStyle.getValue();
             return true;
@@ -340,18 +342,19 @@ namespace gauil {
         return false;
     }
     bool loadFont(const std::string& file, const std::string& name) {
-        GAUIL_ASSERT(getFontFileLoaderFn(), "No font from file loader function has been set");
-        std::any font = getFontFileLoaderFn()(file);
-        if (font.has_value()) {
-            fonts[name] = font;
-            return true;
-        }
-        return false;
+        GAUIL_ASSERT(getLoadTextureFn(), "No font file loader function has been set");
+        std::ifstream stream(file, std::ios::binary);
+        if (!stream)
+            return false;
+        std::vector<uint8_t> buf(std::filesystem::file_size(file));
+        stream.read((char*)buf.data(), buf.size());
+        stream.close();
+        return loadFont(buf.data(), buf.size(), name);
     }
-    bool loadFont(const void* data, size_t length, const std::string& name) {
-        GAUIL_ASSERT(getFontMemoryLoaderFn(), "No font from memory loader function has been set");
-        std::any font = getFontMemoryLoaderFn()(data, length);
-        if (font.has_value()) {
+    bool loadFont(const uint8_t* data, size_t length, const std::string& name) {
+        GAUIL_ASSERT(getLoadTextureFn(), "No font memory loader function has been set");
+        IFont* font = loadFont(data, length);
+        if (font) {
             fonts[name] = font;
             return true;
         }
@@ -360,7 +363,7 @@ namespace gauil {
 #pragma endregion
 #pragma region UIElements
     void labelRaw(const std::string& text, const Vector2f& position, const Vector2f& size, const Style::Label& style) {
-        std::any font = fonts.count(style.font) ? fonts.at(style.font) : getDefaultFont();
+        IFont* font = fonts.count(style.font) ? fonts.at(style.font) : getDefaultFont();
         const Vector2f textBox = priv::measureText(text, size.min(), font);
         const FRect textRect(position + style.padding.getOffset(), size - style.padding.getOffset() - style.padding.getBounds());
         const Vector2f compressedDimensions = ((textRect.size) / textBox);
@@ -398,7 +401,7 @@ namespace gauil {
 
 
         // TODO: Add debug draw option for layout
-        // queueRect(textRect, {}, {}, color::FALLBACK, {});
+        // queueRect(textRect, {}, {}, FALLBACK, {});
         queueText(textRect.position + textBoxAlignment, size.min(), scale, text, font, style.color); // Draw text
     }
     void label(const std::string& text, const Layout2D& position, const Layout2D& size) {
@@ -572,18 +575,7 @@ namespace gauil {
         return mousePressedFn;
     }
 
-    void setFontFileLoaderFn(const std::function<LoadFontFromFileCallback>& fn) {
-        fontFileLoaderFn = fn;
-    }
-    std::function<LoadFontFromFileCallback> getFontFileLoaderFn() {
-        return fontFileLoaderFn;
-    }
-    void setFontMemoryLoaderFn(const std::function<LoadFontFromMemoryCallback>& fn) {
-        fontMemoryLoaderFn = fn;
-    }
-    std::function<LoadFontFromMemoryCallback> getFontMemoryLoaderFn() {
-        return fontMemoryLoaderFn;
-    }
+
     namespace priv {
         bool isMouseDown() {
             return mouseDown && !mouseDownLastFrame;
