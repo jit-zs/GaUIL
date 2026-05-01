@@ -1,7 +1,7 @@
 GaUIL
 =====
 
-This is a GUI engine uses a list of user defined callbacks to interface with most GUI libraries.
+This is a GUI engine that is designed to be portable and easy to use. All the user has to do is register a couple callbacks and set a default font.
 
 # CMake
 ```CMake
