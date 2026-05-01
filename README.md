@@ -1,6 +1,7 @@
 GaUIL
 =====
 This is an immediate mode GUI engine that is designed to be portable, customizable and easy to use.
+It's compatible with both C and C++
 
 # CMake
 ```CMake
