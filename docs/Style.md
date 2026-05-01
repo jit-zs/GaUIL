@@ -105,8 +105,32 @@ element.subelement.button|state{
     - border_color > color
     - background_color > color
 ---
-- The check box check subelement name is ``check`` not ``check_box.check``. It uses all of the same style variables as ``check_box``
-  
+- The check box check's subelement name is ``check`` instead of ``check_box.check``. It uses all of the same style variables as ``check_box``
+#### Slider
+- subelement name: slider
+  - states:
+    - hover
+    - active
+  - variables:
+    - border
+      - border_top > float
+      - border_bottom > float
+      - border_left > float
+      - border_right > float
+    - padding
+      - padding_top > float
+      - padding_bottom > float
+      - padding_left > float
+      - padding_right > float
+    - radius
+      - radius_top_left > float
+      - radius_top_right > float
+      - radius_bottom_left > float
+      - radius_bottom_right > float
+    - border_color > color
+    - background_color > color
+---
+- The slider handles's subelement name is ``slider_handle`` instead of ``slider.handle``. It uses all of the same style variables as ``slider``
   
   
 
