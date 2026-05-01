@@ -39,7 +39,7 @@ element.subelement.button|state{
 - border in element.subelement.button|state = 4
 
 ## Notes
-- Alignment variables are parsed from strings and if they dont specify if they are left or right(for horizontal alignment) or top or bottom(for vertical alignment) they default to center
+- Alignment variables are parsed from strings and if they don't specify if they are left or right (for horizontal alignment) or top or bottom (for vertical alignment) they default to center
 - Padding pushes an element's content away from the border
 
 ## Subelement names for UI elements and their states
@@ -80,7 +80,7 @@ element.subelement.button|state{
     - border_color > color
     - background_color > color
 ---
-- The text styling is all done under the ``button`` subelement
+- The text styling is all done under the ``button`` subelement using the variables defined in the [Label](#label) section
 #### Check box
 - subelement name: check_box
   - states:
