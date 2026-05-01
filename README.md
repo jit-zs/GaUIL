@@ -1,7 +1,6 @@
 GaUIL
 =====
-
-This is a GUI engine that is designed to be portable and easy to use. All the user has to do is register a couple callbacks and set a default font.
+This is an immediate mode GUI engine that is designed to be portable, customizable and easy to use.
 
 # CMake
 ```CMake
