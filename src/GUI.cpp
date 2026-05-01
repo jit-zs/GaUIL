@@ -82,7 +82,7 @@ namespace gauil {
             return mStyle;
         }
     };
-   
+
     static std::map<std::string, IFont*> fonts;
     static std::map<std::string, NineSlice*> nineSliceImages;
 
@@ -364,10 +364,14 @@ namespace gauil {
         }
         return false;
     }
-    bool loadNineSlice(const uint8_t* data, size_t length, const URect& sliceRect, const std::string& referenceName){
+    bool loadNineSlice(const uint8_t* data, size_t length, const URect& sliceRect, const std::string& referenceName) {
         GAUIL_ASSERT(getLoadTextureFn(), "No texture loader function has been set");
         NineSlice* nineSlice = loadNineSlice(data, length, sliceRect);
-        if (nineSlice)
+        if (nineSlice) {
+            nineSliceImages[referenceName] = nineSlice;
+            return true;
+        }
+        return false;
     }
 #pragma endregion
 #pragma region UIElements
