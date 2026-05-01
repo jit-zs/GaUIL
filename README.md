@@ -14,7 +14,8 @@ target_link_libraries(project_name PRIVATE GaUIL)
 
 If you need any help just submit an issue, or you can look at dev/main.cpp. Just make sure you're looking at it in a stable version and not directly from the master branch
 
-![Demo](https://github.com/user-attachments/assets/f58a99d3-0ada-4d9e-ba1e-b03068dd32bd)
+Demo
+<video src="https://github.com/user-attachments/assets/f58a99d3-0ada-4d9e-ba1e-b03068dd32bd" width="200" height="100" controls></video>
 
 Notes
 --
