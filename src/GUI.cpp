@@ -1,6 +1,7 @@
 #include <GaUIL/GUI.hpp>
 #include <GaUIL/Assert.hpp>
 #include <GaUIL/Draw.hpp>
+#include <GaUIL/NineSlice.hpp>
 #include <GaUIL/Style.hpp>
 #include <GaUIL/Text.hpp>
 
@@ -81,8 +82,9 @@ namespace gauil {
             return mStyle;
         }
     };
-
+   
     static std::map<std::string, IFont*> fonts;
+    static std::map<std::string, NineSlice*> nineSliceImages;
 
     static Vector2u windowSize;
     static Vector2i mousePos;
@@ -343,24 +345,29 @@ namespace gauil {
             printf("%s\n", err.c_str());
         return false;
     }
-    bool loadFont(const std::string& file, const std::string& name) {
-        GAUIL_ASSERT(getLoadTextureFn(), "No font file loader function has been set");
+    bool loadFont(const std::string& file, const std::string& referenceName) {
+        GAUIL_ASSERT(getLoadTextureFn(), "No texture loader function has been set");
         std::ifstream stream(file, std::ios::binary);
         if (!stream)
             return false;
         std::vector<uint8_t> buf(std::filesystem::file_size(file));
         stream.read((char*)buf.data(), buf.size());
         stream.close();
-        return loadFont(buf.data(), buf.size(), name);
+        return loadFont(buf.data(), buf.size(), referenceName);
     }
-    bool loadFont(const uint8_t* data, size_t length, const std::string& name) {
-        GAUIL_ASSERT(getLoadTextureFn(), "No font memory loader function has been set");
+    bool loadFont(const uint8_t* data, size_t length, const std::string& referenceName) {
+        GAUIL_ASSERT(getLoadTextureFn(), "No texture loader function has been set");
         IFont* font = loadFont(data, length);
         if (font) {
-            fonts[name] = font;
+            fonts[referenceName] = font;
             return true;
         }
         return false;
+    }
+    bool loadNineSlice(const uint8_t* data, size_t length, const URect& sliceRect, const std::string& referenceName){
+        GAUIL_ASSERT(getLoadTextureFn(), "No texture loader function has been set");
+        NineSlice* nineSlice = loadNineSlice(data, length, sliceRect);
+        if (nineSlice)
     }
 #pragma endregion
 #pragma region UIElements

@@ -1,8 +1,10 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
-#include <GaUIL/GaUIL.hpp>
 #include <GaUIL/Draw.hpp>
+#include <GaUIL/GaUIL.hpp>
+#include <GaUIL/NineSlice.hpp>
+
 
 #include <fstream>
 #include <stack>
@@ -91,7 +93,7 @@ void options();
 
 void mainMenu() {
     gauil::panel({ 10_percent, 10_percent }, { 80_percent, 30_percent }, "panel");
-    gauil::label("Orange Juice[$$]Hi[@@]bear", { 10_percent, 10_percent }, { 80_percent, 30_percent });
+    gauil::label("Dev[$$]Hi[@@]bear", { 10_percent, 10_percent }, { 80_percent, 30_percent });
 
     if (gauil::button("Start", { 45_percent, 50_percent }, { 10_percent, 4_percent })) {
         printf("Start\n");
@@ -180,6 +182,10 @@ int main() {
     f.openFromMemory(buf.data(), buf.size());
 
     uiStack.push(mainMenu);
+
+    sf::Image img ;
+    img.loadFromFile("NineSlice.png");
+    gauil::NineSlice nineSlice(img.getPixelsPtr(), img.getSize().x, img.getSize().y, { 10, 10, 110, 40 });
     while (window->isOpen()) {
         while (auto ev = window->pollEvent()) {
             if (ev->is<sf::Event::Closed>()) {
@@ -203,6 +209,7 @@ int main() {
         uiStack.top()();
 
         gauil::draw();
+        // nineSlice.draw({100, 100}, gauil::Vector2f::ONE, gauil::WHITE);
 
         window->display();
         window->clear(sf::Color(30, 20, 60));

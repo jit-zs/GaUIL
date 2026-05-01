@@ -43,6 +43,7 @@ add_library(${PROJECT_NAME} STATIC
     src/GaUIL_C.cpp
     src/GUI.cpp
     src/Impls.cpp
+    src/NineSlice.cpp
     src/Style.cpp
     src/Text.cpp
     )

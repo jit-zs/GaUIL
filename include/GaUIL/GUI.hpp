@@ -36,6 +36,13 @@ namespace gauil {
     /// @returns True on success
     bool loadFont(const uint8_t* data, size_t length, const std::string& referenceName);
 
+    /// @brief Loads a nine sliced image from memory and adds it to the nine slice list
+    /// @param data 
+    /// @param length 
+    /// @param referenceName The name that will be used to reference it in the style sheet
+    /// @returns True on success
+    bool loadNineSlice(const uint8_t* data, size_t length, const URect& sliceRect, const std::string& referenceName);
+
     /// @brief Loads Simple Style Sheet from string
     /// @returns true on success else false
     bool loadStyle(const std::string& string);
