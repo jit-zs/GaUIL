@@ -9,7 +9,7 @@
 
 namespace gauil {
 
-    template<typename T, std::enable_if_t<std::is_floating_point_v<T> || std::is_integral_v<T>, bool> = true>
+    template<typename T>
     struct Rect {
         union {
             struct {
