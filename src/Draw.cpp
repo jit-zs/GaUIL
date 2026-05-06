@@ -149,7 +149,7 @@ namespace gauil {
         // TODO: Borders
         void roundRect(const FRect& rect, const FCorners& radius, const FEdges& borders, const Color& backgroundColor, const Color& borderColor) {
 
-            static constexpr int DETAIL = 8; // Amount of vertices on each corner
+            static constexpr int DETAIL = 16; // Amount of vertices on each corner
             std::vector<Vertex> vertices(DETAIL * 4 + 3);
             std::vector<Vertex> borderVertices;
             vertices[0].position = rect.getCenter();
