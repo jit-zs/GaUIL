@@ -58,7 +58,6 @@ if (${COMPILE_DEV})
         SFML::System
         SFML::Window
         SFML::Graphics
-        SFML::Network
         SFML::Audio
         ${PROJECT_NAME}
         )
