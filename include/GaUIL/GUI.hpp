@@ -37,8 +37,8 @@ namespace gauil {
     bool loadFont(const uint8_t* data, size_t length, const std::string& referenceName);
 
     /// @brief Loads a nine sliced image from memory and adds it to the nine slice list
-    /// @param data 
-    /// @param length 
+    /// @param data
+    /// @param length
     /// @param referenceName The name that will be used to reference it in the style sheet
     /// @returns True on success
     bool loadNineSlice(const uint8_t* data, size_t length, const URect& sliceRect, const std::string& referenceName);
@@ -54,29 +54,29 @@ namespace gauil {
     void draw();
 
     /// @brief Draws a label
-    /// @param position 
-    /// @param size 
-    /// @param text 
-    void label(const std::string& text, const Layout2D& position, const  Layout2D& size);
+    /// @param position
+    /// @param size
+    /// @param text
+    void label(const std::string& text, const Layout2D& position, const Layout2D& size);
 
     /// @brief Draws a panel
     void panel(const Layout2D& position, const Layout2D& size, const std::string& style = "");
 
     /// @brief Draws a button
-    /// @param position 
-    /// @param size 
-    /// @param text 
+    /// @param position
+    /// @param size
+    /// @param text
     /// @return Whether the button was released over the button
     bool button(const std::string& text, const Layout2D& position, const Layout2D& size);
 
 
 
-    /// @brief 
-    /// @param value 
-    /// @param style 
-    /// @param position 
-    /// @param size 
-    /// @returns if the box was clicked this frame 
+    /// @brief
+    /// @param value
+    /// @param style
+    /// @param position
+    /// @param size
+    /// @returns if the box was clicked this frame
     bool checkBox(bool* value, const std::string& style, const Layout2D& position, const Layout2D& size);
 
 

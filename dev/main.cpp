@@ -6,6 +6,7 @@
 #include <GaUIL/NineSlice.hpp>
 
 
+#include <format>
 #include <fstream>
 #include <stack>
 
@@ -88,6 +89,7 @@ sf::RenderWindow* window;
 
 std::stack<void(*)()> uiStack;
 
+void subRectTest();
 void mainMenu();
 void options();
 
@@ -102,9 +104,26 @@ void mainMenu() {
     if (gauil::button("Options", { 45_percent, 55_percent }, { 10_percent, 4_percent })) {
         uiStack.push(options);
     }
-    if (gauil::button("Quit[$$]X[@@]", { 45_percent, 60_percent }, { 10_percent, 4_percent })) {
+    if (gauil::button("Subrect Test", { 45_percent, 60_percent }, { 10_percent, 4_percent })) {
+        uiStack.push(subRectTest);
+    }
+    if (gauil::button("Quit[$$]X[@@]", { 45_percent, 65_percent }, { 10_percent, 4_percent })) {
         window->close();
     }
+}
+
+void subRectTest() {
+    if (gauil::button("Back[@@]back", { 0, 0 }, { 5_percent, 5_percent })) {
+        uiStack.pop();
+    }
+
+    constexpr int repetitions = 3;
+    for (int i = 0; i < repetitions; i++) {
+        gauil::pushSubRect({ 30_percent, 30_percent }, { 30_percent, 30_percent });
+        gauil::panel({ 0, 0 }, { 100_percent, 100_percent }, "subrect");
+    }
+    for (int i = 0; i < repetitions; i++)
+        gauil::popSubRect();
 }
 
 void options() {
@@ -117,7 +136,7 @@ void options() {
     gauil::checkBox(&vsync, "", { 40_percent, 10_percent }, { 5_percent, gauil::OTHER_LAYOUT });
 
     static float volume = 50.f;
-    gauil::label("Volume[@@]options", { 0_percent, 20_percent }, { 15_percent, gauil::scaleWithOpposingAxis(5_percent) });
+    gauil::label("Volume: " + std::to_string(volume / 100.f) + "%[@@]options", { 0_percent, 20_percent }, { 15_percent, gauil::scaleWithOpposingAxis(5_percent) });
     gauil::slider(&volume, "", 0.f, 100.f, { 40_percent, 20_percent }, { 30_percent, gauil::scaleWithOpposingAxis(5_percent) });
 
 }
@@ -150,7 +169,7 @@ int main() {
     auto fullscreenModes = sf::VideoMode::getFullscreenModes();
 
     sf::ContextSettings windowSettings;
-    windowSettings.antiAliasingLevel = 0;
+    windowSettings.antiAliasingLevel = 8;
     window = new sf::RenderWindow();
     window->create(fullscreenModes[0], "GaUIL Dev", sf::State::Windowed, windowSettings);
 
@@ -183,7 +202,8 @@ int main() {
 
     uiStack.push(mainMenu);
 
-    sf::Image img ;
+    window->setFramerateLimit(0);
+    sf::Image img;
     img.loadFromFile("NineSlice.png");
     gauil::NineSlice nineSlice(img.getPixelsPtr(), img.getSize().x, img.getSize().y, { 10, 10, 110, 40 });
     while (window->isOpen()) {

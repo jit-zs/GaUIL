@@ -17,15 +17,34 @@ bear{
     font: "Wedgie";
 }
 
+subrect{
+    background_color: rgb(255, 128, 128);
+    border_color: rgb(55, 11, 11);
+    radius: 2;
+}
+
 button|hover{
     background_color: rgb(84, 84, 84);
 }
 slider{
     padding: 2;
-    radius: 0;
+    radius: 1000;
+    border_color: rgb(200, 200, 200);
+    background_color: rgb(255, 255, 255);
 }
 slider_handle{
-    radius: 0;
+    radius: 1000;
+    border_color: rgb(170, 170, 170);
+    background_color: rgb(150, 150, 150);
+    margin_bottom: 20;
+}
+
+flat_slider{
+    
+}
+
+window{
+    title_bar_height: 32;
 }
 
 
@@ -51,6 +70,8 @@ check|hover{
 check|active{
     radius: 4;
 }
+
+
 
 back{
     radius: 0;
