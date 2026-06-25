@@ -18,3 +18,4 @@ Demo/Examples can be found in the dev folder
 Notes
 --
 - The C header is incompatible with C++
+- Without anti-aliasing some of the edges might have stray pixels from rounded rect generation
