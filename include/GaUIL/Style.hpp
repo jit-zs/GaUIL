@@ -14,22 +14,28 @@
 
 namespace gauil {
     enum class VerticalAlignment {
-        Top, Center, Bottom
+        Top,
+        Center,
+        Bottom
     };
     enum class HorizontalAlignment {
-        Left, Center, Right
+        Left,
+        Center,
+        Right
     };
     struct Style {
         static constexpr float DEFAULT_PADDING = 3;
         static constexpr float DEFAULT_BORDER_WIDTH = 2;
         static constexpr float DEFAULT_BORDER_RADIUS = 5;
 
-        static constexpr Color DEFAULT_TEXT_COLOR{ 255, 255, 255, 255 };
+        static constexpr float DEFAULT_TITLE_BAR_HEIGHT = 32;
+
+        static constexpr Color DEFAULT_TEXT_COLOR {255, 255, 255, 255};
 
         static constexpr Color DEFAULT_CHECK_BACKGROUND_COLOR = WHITE;
         static constexpr Color DEFAULT_CHECK_BORDER_COLOR = WHITE;
 
-        
+
 
         struct Label {
             Color color = WHITE;
@@ -49,8 +55,12 @@ namespace gauil {
             Color borderColor = DARK_MODE_BORDER;
             Color backgroundColor = DARK_MODE_BACKGROUND;
         };
-
-        struct Slider : Panel{
+        struct Window : Panel {
+            float titleBarHeight = DEFAULT_TITLE_BAR_HEIGHT;
+            Label title;
+            Panel titleBar;
+        };
+        struct Slider : Panel {
             Panel handle;
         };
         struct CheckBox : Panel {
@@ -68,7 +78,8 @@ namespace gauil {
         Label label;
 
         Style();
-    private:
+
+      private:
     };
 
 };
