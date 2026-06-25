@@ -43,7 +43,7 @@ namespace gauil {
                 result.y = y.value;
                 break;
             case Layout::Type::Percent:
-                result.y = (y.value / 100.0f) * (y.scaleWithOpposingAxis ? containerSize.x :  containerSize.y);
+                result.y = (y.value / 100.0f) * (y.scaleWithOpposingAxis ? containerSize.x : containerSize.y);
                 break;
             case Layout::Type::OtherLayout:
                 result.y = result.x;
@@ -57,6 +57,24 @@ namespace gauil {
         constexpr Layout2D(const Vector2f& vec) : x(vec.x), y(vec.y) {}
         constexpr Layout2D() = default;
     };
+    struct LayoutRect {
+
+        Layout2D position;
+        Layout2D size;
+
+
+
+        /// @returns the layout as a rect based on the given size
+        [[nodiscard]] constexpr FRect getRect(const Vector2f& containerSize) const {
+            Vector2f posPixels = position.getPixels(containerSize);
+            Vector2f sizePixels = size.getPixels(containerSize);
+            return Rect(posPixels, sizePixels);
+        }
+        constexpr LayoutRect(const Layout2D& pos, const Layout2D& size) : position(pos), size(size) {}
+        constexpr LayoutRect(const Layout& x, const Layout& y, const Layout& w, const Layout& h) : position({ x, y }), size({ w, h }) {}
+        constexpr LayoutRect() : position(Layout2D{ {0}, {0} }), size(Layout2D{ {0}, {0} }) {}
+    };
+
     inline static constexpr Layout OTHER_LAYOUT = { 0, Layout::Type::OtherLayout };
     constexpr Layout scaleWithOpposingAxis(const Layout& other) {
         Layout layout = other;
