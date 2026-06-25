@@ -1,0 +1,43 @@
+IncludeBlocks: Preserve
+SortIncludes: true
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 0
+MaxEmptyLinesToKeep: 10
+
+
+AlwaysBreakTemplateDeclarations: Yes
+
+
+
+CompactNamespaces: false
+FixNamespaceComments: false 
+NamespaceIndentation: All
+
+PointerAlignment: Left
+AlignAfterOpenBracket: AlwaysBreak
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: false
+  AfterExternBlock: false
+  AfterFunction: false
+  AfterObjCDeclaration: false
+  AfterNamespace: false
+  AfterUnion: false
+
+  BeforeCatch: true
+  BeforeElse: true
+ 
+
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements  
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeCtorInitializerColon: true
+SpacesInAngles: false
+SpacesInContainerLiterals: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
