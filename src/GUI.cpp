@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <any>
+#include <deque>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -20,7 +21,7 @@
 
 using namespace std::string_literals;
 namespace gauil {
-    static std::map<std::string, std::any> auxiliaryUIData;
+    static std::map<std::string, std::map<std::string, std::any>> auxiliaryUIData;
     static std::set<std::string> drawnUIElements;
 
     struct DrawCall {
@@ -47,15 +48,15 @@ namespace gauil {
 
     class LabelData {
         std::string mText, mId, mStyle;
-    public:
+
+      public:
         LabelData() = delete;
         LabelData(const std::string& raw) {
             static const std::string textDelimiter = "[$$]";
             static const std::string styleDelimiter = "[@@]";
 
             bool useStyleDelimOnText = raw.find(textDelimiter) == std::string::npos;
-            mText = std::string(raw.begin(), std::search(raw.begin(), raw.end(), std::boyer_moore_searcher(
-                useStyleDelimOnText ? styleDelimiter.begin() : textDelimiter.begin(), useStyleDelimOnText ? styleDelimiter.end() : textDelimiter.end())), std::allocator<char>());
+            mText = std::string(raw.begin(), std::search(raw.begin(), raw.end(), std::boyer_moore_searcher(useStyleDelimOnText ? styleDelimiter.begin() : textDelimiter.begin(), useStyleDelimOnText ? styleDelimiter.end() : textDelimiter.end())), std::allocator<char>());
             mId = std::string(raw.begin(), std::search(raw.begin(), raw.end(), std::boyer_moore_searcher(styleDelimiter.begin(), styleDelimiter.end())), std::allocator<char>());
 
 
@@ -96,8 +97,39 @@ namespace gauil {
 
     // static Style style;
     static simss::StyleSheet style;
-    static std::stack<FRect> subRectStack;
-    static Vector2f subRectOffset;
+    static struct {
+      private:
+        std::deque<LayoutRect> mSubRectStack;
+
+      public:
+        Vector2f getOffset() {
+            Vector2f size = (Vector2f)priv::windowSize();
+            Vector2f position = Vector2f::ZERO;
+            for (size_t i = 0; i < mSubRectStack.size(); i++) {
+                position += mSubRectStack[i].position.getPixels(size);
+                size = mSubRectStack[i].size.getPixels(size);
+            }
+            return position;
+        }
+        Vector2f getSize() {
+            Vector2f size = (Vector2f)priv::windowSize();
+            for (size_t i = 0; i < mSubRectStack.size(); i++) {
+                size = mSubRectStack[i].size.getPixels(size);
+            }
+            return size;
+        }
+        size_t pushSubRect(const Layout2D& position, const Layout2D& size) {
+            mSubRectStack.push_back(LayoutRect {position.x, position.y, size.x, size.y});
+            return mSubRectStack.size() - 1;
+        }
+        void popSubRect() {
+            mSubRectStack.pop_back();
+        }
+        size_t size() const {
+            return mSubRectStack.size();
+        }
+    } subRects;
+
 
 
     static std::vector<DrawCall> cachedDrawCalls; // All elements to be drawn this frame
@@ -147,14 +179,16 @@ namespace gauil {
         label.color = gauil::style.getValue(fullStyle, "text_color").asColor(Style::DEFAULT_TEXT_COLOR.array);
         label.font = gauil::style.getValue(fullStyle, "font").asString();
         std::string hzAlignment = gauil::style.getValue(fullStyle, "horizontal_alignment").asString("center");
-        label.horizontalAlignment = hzAlignment == "left" ? HorizontalAlignment::Left : hzAlignment == "right" ? HorizontalAlignment::Right : HorizontalAlignment::Center;
+        label.horizontalAlignment = hzAlignment == "left" ? HorizontalAlignment::Left : hzAlignment == "right" ? HorizontalAlignment::Right
+                                                                                                               : HorizontalAlignment::Center;
 
-        std::string vtAlignment = gauil::style.getValue(fullStyle, "vertical_alignment").asString();
-        label.verticalAlignment = vtAlignment == "top" ? VerticalAlignment::Top : vtAlignment == "bottom" ? VerticalAlignment::Bottom : VerticalAlignment::Center;
+        std::string vtAlignment = gauil::style.getValue(fullStyle, "vertical_alignment").asString("center");
+        label.verticalAlignment = vtAlignment == "top" ? VerticalAlignment::Top : vtAlignment == "bottom" ? VerticalAlignment::Bottom
+                                                                                                          : VerticalAlignment::Center;
         return label;
     }
-    inline Style::Panel getPanelStyle(const std::string& style, const std::string& state) {
-        std::string fullStyle = style + (style.empty() ? "" : ".") + "panel" + state;
+    inline Style::Panel getPanelStyle(const std::string& style, const std::string& state, const std::string& alias = "panel") {
+        std::string fullStyle = style + (style.empty() ? "" : ".") + alias+ state;
         Style::Panel panel;
         panel.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(DARK_MODE_BACKGROUND.array);
         panel.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(DARK_MODE_BORDER.array);
@@ -220,22 +254,41 @@ namespace gauil {
 
         return slider;
     }
+    Style::Window getWindowStyle(const std::string& style) {
+        std::string fullStyle = style + (style.empty() ? "" : ".") + "window";
+        Style::Window window;
+        window.backgroundColor = gauil::style.getValue(fullStyle, "background_color").asColor(DARK_MODE_BACKGROUND.array);
+        window.borderColor = gauil::style.getValue(fullStyle, "border_color").asColor(DARK_MODE_BORDER.array);
+
+        window.border = getBorder(fullStyle, Style::DEFAULT_BORDER_WIDTH);
+        window.padding = getPadding(fullStyle, Style::DEFAULT_PADDING);
+        window.borderRadius = getBorderRadius(fullStyle, Style::DEFAULT_BORDER_RADIUS);
+
+        window.titleBarHeight = ::gauil::style.getValue(style, "title_bar_height", Style::DEFAULT_TITLE_BAR_HEIGHT).asNumber();
+       
+        window.title = getLabelStyle(style);
+        window.titleBar = getPanelStyle(style, "");
+       
+        return window;
+    }
 #pragma endregion
     inline Vector2f getCurrentOffset() {
-        return subRectOffset;
+        return subRects.getOffset();
     }
     inline Vector2f layoutToSize(const Layout2D& layout) {
-        return layout.getPixels(subRectStack.top().size);
+        return layout.getPixels(subRects.getSize());
     }
 
     /// @brief Same as layout to size but adds subRectOffset to the result
-    /// @param layout 
+    /// @param layout
     /// @note Only use this function in non raw UI elem functions
-    /// @return 
+    /// @return
     inline Vector2f layoutToPosition(const Layout2D& layout) {
-        return layout.getPixels(subRectStack.top().size) + subRectOffset;
+        return layout.getPixels(subRects.getSize()) + subRects.getOffset();
     }
-    std::string getMouseState(const Layout2D& position, const Layout2D& size) {
+    /// @brief Returns a style state depending on the mouses position
+    /// @returns "|active" if mouse is down on the specified, "|hover" if mouse is hovering or nothing
+    std::string getStateFromMouse(const Layout2D& position, const Layout2D& size) {
         FRect rect(layoutToPosition(position), layoutToSize(size));
         if (rect.contains(static_cast<Vector2f>(mousePos)))
             return priv::isMouseHeld() ? "|active" : "|hover";
@@ -309,29 +362,22 @@ namespace gauil {
         GAUIL_ASSERT(getDrawTextureFn(), "No draw texture function has been set");
 
 
-        subRectStack.push({ {}, (Vector2f)windowSizeFn() });
-        subRectOffset = Vector2f::ZERO;
+        subRects.pushSubRect({}, (Vector2f)windowSizeFn());
 
         style = simss::StyleSheet();
     }
     void cleanup() {
-
     }
+
 
     void pushSubRect(const Layout2D& position, const Layout2D& size) {
         GAUIL_ASSERT(uiActive, "Can only push sub rects between update and draw");
-        const FRect& rect = subRectStack.top();
-
-        Vector2f offset = position.getPixels(rect.size);
-        subRectStack.push({ offset, size.getPixels(rect.size) });
-        subRectOffset += offset;
+        subRects.pushSubRect(position, size);
     }
     void popSubRect() {
         GAUIL_ASSERT(uiActive, "Can only pop sub rects between update and draw");
-        GAUIL_ASSERT(subRectStack.size() > 1, "Sub rect stack underflow");
-        const FRect& rect = subRectStack.top();
-        subRectOffset -= rect.position;
-        subRectStack.pop();
+        GAUIL_ASSERT(subRects.size() > 1, "Sub rect stack underflow");
+        subRects.popSubRect();
     }
 #pragma region Loaders
     bool loadStyle(const std::string& styleSheet) {
@@ -410,7 +456,7 @@ namespace gauil {
             }
 
             return result;
-            }(style.verticalAlignment, style.horizontalAlignment);
+        }(style.verticalAlignment, style.horizontalAlignment);
 
 
         // TODO: Add debug draw option for layout
@@ -427,7 +473,7 @@ namespace gauil {
         queueRect(FRect(position, size), style.borderRadius, style.border, style.backgroundColor, style.borderColor);
     }
     void panel(const Layout2D& position, const Layout2D& size, const std::string& style) {
-        std::string state = getMouseState(position, size);
+        std::string state = getStateFromMouse(position, size);
         panelRaw(layoutToPosition(position), layoutToSize(size), getPanelStyle(style, state));
     }
     bool buttonRaw(const std::string& text, const Vector2f& position, const Vector2f& size, const Style::Button& buttonStyle) {
@@ -453,14 +499,14 @@ namespace gauil {
         drawnUIElements.insert(data.getId());
         Vector2f pixPos = layoutToPosition(position);
         Vector2f pixSize = layoutToSize(size);
-        std::string state = getMouseState(position, size);
+        std::string state = getStateFromMouse(position, size);
 
         return buttonRaw(data.getText(), pixPos, pixSize, getButtonStyle(data.getStyle(), state));
     }
 
 
     bool checkBoxRaw(bool* _bool, const std::string& style, const Vector2f& position, const Vector2f& size, const Style::CheckBox& checkBox) {
-        queueRect(FRect{ position, size }, checkBox.borderRadius, checkBox.border, checkBox.backgroundColor, checkBox.borderColor);
+        queueRect(FRect {position, size}, checkBox.borderRadius, checkBox.border, checkBox.backgroundColor, checkBox.borderColor);
         Vector2f backgroundOffset = Vector2f(checkBox.border.left, checkBox.border.top);
         Vector2f backgroundBounds = Vector2f(checkBox.border.right, checkBox.border.bottom);
 
@@ -474,34 +520,33 @@ namespace gauil {
         if (clicked)
             *_bool = !*_bool;
         if (*_bool)
-            queueRect(FRect{ position + totalOffset, size - totalOffset - totalBounds }, checkBox.checkMark.borderRadius, checkBox.checkMark.border, checkBox.checkMark.backgroundColor, checkBox.checkMark.borderColor);
+            queueRect(FRect {position + totalOffset, size - totalOffset - totalBounds}, checkBox.checkMark.borderRadius, checkBox.checkMark.border, checkBox.checkMark.backgroundColor, checkBox.checkMark.borderColor);
         return clicked;
     }
     bool checkBox(bool* _bool, const std::string& style, const Layout2D& position, const Layout2D& size) {
         auto pixPos = layoutToPosition(position);
         auto pixSize = layoutToSize(size);
-        std::string state = getMouseState(position, size);
+        std::string state = getStateFromMouse(position, size);
         return checkBoxRaw(_bool, style, pixPos, pixSize, getCheckBoxStyle(style, state));
     }
 
     void sliderRaw(float* value, float min, float max, const Vector2f& position, const Vector2f& size, const Style::Slider& style) {
         GAUIL_ASSERT(max != min, "Slider max and min cannot be equal");
-        queueRect(FRect{ position, size }, style.borderRadius, style.border, style.backgroundColor, style.borderColor);
+        queueRect(FRect {position, size}, style.borderRadius, style.border, style.backgroundColor, style.borderColor);
 
 
 
-        Vector2f handleSize = Vector2f(size.y, size.y) - style.padding.getOffset() - style.padding.getBounds();
-        Vector2f handlePosition = position + style.padding.getOffset() + Vector2f(*value / (max - min) * (size.x - handleSize.x), 0);
-        if ((priv::isMouseDown() || priv::isMouseHeld()) && FRect { position, size }.contains((Vector2f)mousePos)) {
+        Vector2f handleSize = Vector2f(size.y, size.y) - style.padding.getOffset() - style.padding.getBounds() - style.border.getOffset() - style.border.getBounds();
+        Vector2f handlePosition = position + style.padding.getOffset() + style.border.getOffset() + Vector2f(*value / (max - min) * (size.x - style.padding.getOffset().x - style.padding.getBounds().x - style.border.getOffset().x - style.border.getBounds().x - handleSize.x), 0);
+        if ((priv::isMouseDown() || priv::isMouseHeld()) && FRect {position, size}.contains((Vector2f)mousePos)) {
             FRect rect(position + style.padding.getOffset(), size - style.padding.getOffset() - style.padding.getBounds());
             if (rect.contains((Vector2f)mousePos)) {
-                float relativeX = (mousePos.x - rect.position.x) / rect.size.x;
+                float relativeX = (mousePos.x - handleSize.x * 0.5 - rect.position.x - style.padding.getOffset().x - style.border.getOffset().x) / (rect.size.x - style.padding.getOffset().x - style.padding.getBounds().x - style.border.getOffset().x - style.border.getBounds().x - handleSize.x);
                 *value = min + (relativeX * (max - min));
                 *value = std::clamp(*value, min, max);
             }
         }
-        queueRect(FRect{ handlePosition, handleSize }, style.handle.borderRadius, style.handle.border, style.handle.backgroundColor, style.handle.borderColor);
-
+        queueRect(FRect {handlePosition, handleSize}, style.handle.borderRadius, style.handle.border, style.handle.backgroundColor, style.handle.borderColor);
     }
     void slider(float* value, const std::string& style, float min, float max, const Layout2D& position, const Layout2D& size) {
         auto pixPos = layoutToPosition(position);
@@ -509,11 +554,11 @@ namespace gauil {
         std::string state = [&] {
             FRect rect;
             rect.position = pixPos + Vector2f(lerp(min, max, *value) * (pixSize.x - pixSize.y), 0);
-            rect.size = { pixSize.y, pixSize.y };
+            rect.size = {pixSize.y, pixSize.y};
             if (rect.contains(static_cast<Vector2f>(mousePos)))
                 return priv::isMouseHeld() ? "|active" : "|hover";
             return "";
-            }();
+        }();
         sliderRaw(value, min, max, pixPos, pixSize, getSliderStyle(style, state));
     }
 #pragma endregion
@@ -530,14 +575,13 @@ namespace gauil {
         mouseDown = mousePressedFn();
         windowSize = windowSizeFn();
         mousePos = mousePosFn();
-
-        subRectStack.top() = { {}, (Vector2f)windowSize };
-
+        subRects.popSubRect();
+        subRects.pushSubRect({}, (Vector2f)windowSize);
     }
 
     void draw() {
         GAUIL_ASSERT(uiActive, "gauil::update was not called before gauil::draw");
-        GAUIL_ASSERT(subRectStack.size() == 1, "The child rect stack was not cleaned properly");
+        GAUIL_ASSERT(subRects.size() == 1, "The child rect stack was not cleaned properly");
         uiActive = false;
 
 
