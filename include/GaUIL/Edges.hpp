@@ -54,6 +54,9 @@ namespace gauil {
         constexpr bool isZero() const {
             return !top && !bottom && !left && !right;
         }
+        constexpr Vector2<T> getShrinkage() const{
+            return getOffset() + getBounds();
+        }
 
     };
     typedef Edges<float> FEdges;
